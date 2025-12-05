@@ -18,7 +18,7 @@ export default function NavigationBar() {
               priority
             />
           </div>
-          <p className="font-extrabold text-[24px] text-white whitespace-nowrap">
+          <p className="font-[family-name:var(--font-poppins)] font-extrabold text-[24px] text-white whitespace-nowrap">
             PP TOUR TRAVEL
           </p>
         </div>
@@ -27,37 +27,37 @@ export default function NavigationBar() {
         <div className="flex items-center gap-[26.569px]">
           <Link 
             href="/"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal border-b border-white hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal border-b border-white hover:opacity-100 transition-opacity"
           >
             Home
           </Link>
           <Link 
             href="/paket"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
           >
             Paket
           </Link>
           <Link 
             href="/tentang"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
           >
             Tentang
           </Link>
           <Link 
             href="/kontak"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-normal hover:opacity-100 transition-opacity"
           >
             Kontak
           </Link>
           <Link 
             href="/login"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-bold hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-bold hover:opacity-100 transition-opacity"
           >
             Log In
           </Link>
           <Link 
             href="/sign-up"
-            className="px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-bold hover:opacity-100 transition-opacity"
+            className="font-[family-name:var(--font-inter)] px-[8.856px] py-[8.856px] text-white opacity-70 text-[17.712px] font-bold hover:opacity-100 transition-opacity"
           >
             Sign Up
           </Link>
