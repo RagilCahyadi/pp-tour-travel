@@ -22,12 +22,12 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/44" />
         
         {/* Navigation Bar */}
-        <div className="relative z-10">
+        <div className="relative z-20">
           <NavigationBar />
         </div>
         
         {/* Hero Content */}
-        <div className="relative z-10 px-[165px] pt-[235px]">
+        <div className="relative z-[5] px-[165px] pt-[235px]">
           <p className="font-[family-name:var(--font-poppins)] text-white text-[20px] font-bold uppercase mb-[43px]">
             Destinasi Terbaik di Seluruh Indonesia
           </p>
