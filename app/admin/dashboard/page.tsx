@@ -4,9 +4,16 @@ import AdminSidebar from '@/components/AdminSidebar'
 import Link from 'next/link'
 import { useDashboard } from '@/lib/hooks/useDashboard'
 import { formatRupiah, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils/helpers'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { useState, useEffect } from 'react'
 
 export default function AdminDashboard() {
-  const { stats, recentBookings, upcomingDepartures, loading, error } = useDashboard()
+  const { stats, monthlyData, recentBookings, upcomingDepartures, loading, error } = useDashboard()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (loading) {
     return (
@@ -85,7 +92,7 @@ export default function AdminDashboard() {
           {/* Stats Cards */}
           <div className="grid grid-cols-4 gap-6">
             {/* Booking Bulan Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
@@ -110,7 +117,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Pendapatan Bulan Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
@@ -135,7 +142,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Menunggu Verifikasi */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
@@ -161,7 +168,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Keberangkatan Minggu Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
@@ -185,95 +192,193 @@ export default function AdminDashboard() {
           {/* Charts Section */}
           <div className="grid grid-cols-3 gap-6">
             {/* Trend Booking */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold text-[#101828] mb-6">
-                Trend Booking 7 Bulan Terakhir
-              </h3>
-              <div className="h-72 flex items-center justify-center text-gray-400">
-                {/* Placeholder for chart */}
-                <div className="text-center">
-                  <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                  </svg>
-                  <p>Chart akan ditampilkan di sini</p>
+            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-[#101828]">
+                  Trend Booking & Pendapatan
+                </h3>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#009966]"></div>
+                    <span className="text-gray-600">Booking</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
+                    <span className="text-gray-600">Pendapatan</span>
+                  </div>
                 </div>
               </div>
+              {mounted && monthlyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#6a7282"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis 
+                      yAxisId="left"
+                      stroke="#6a7282"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis 
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#6a7282"
+                      style={{ fontSize: '12px' }}
+                      tickFormatter={(value) => `${(value / 1000000).toFixed(0)}jt`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === 'bookings') return [value, 'Booking']
+                        if (name === 'revenue') return [formatRupiah(value), 'Pendapatan']
+                        return [value, name]
+                      }}
+                    />
+                    <Line 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="bookings" 
+                      stroke="#009966" 
+                      strokeWidth={3}
+                      dot={{ fill: '#009966', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      yAxisId="right"
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#3b82f6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3b82f6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009966] mx-auto mb-2"></div>
+                    <p>Memuat data chart...</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Status Pembayaran */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
               <h3 className="text-xl font-semibold text-[#101828] mb-6">
                 Status Pembayaran
               </h3>
-              <div className="h-48 flex items-center justify-center mb-6">
-                {/* Placeholder for donut chart */}
-                <div className="relative w-48 h-48">
-                  <svg className="w-full h-full" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20" strokeDasharray="220 280" transform="rotate(-90 50 50)" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" strokeWidth="20" strokeDasharray="30 280" strokeDashoffset="-220" transform="rotate(-90 50 50)" />
-                  </svg>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                    <span className="text-sm text-[#4a5565]">Sudah Dibayar</span>
+              {mounted ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Sudah Dibayar', value: stats?.booking_bulan_ini ? stats.booking_bulan_ini - (stats?.menunggu_verifikasi || 0) : 0 },
+                          { name: 'Menunggu', value: stats?.menunggu_verifikasi || 0 }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#f59e0b" />
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-3 mt-4">
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span className="text-sm text-[#4a5565]">Sudah Dibayar</span>
+                      </div>
+                      <span className="text-sm font-medium text-[#101828]">
+                        {stats?.booking_bulan_ini ? stats.booking_bulan_ini - (stats?.menunggu_verifikasi || 0) : 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <span className="text-sm text-[#4a5565]">Menunggu Verifikasi</span>
+                      </div>
+                      <span className="text-sm font-medium text-[#101828]">{stats?.menunggu_verifikasi || 0}</span>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-[#101828]">21</span>
+                </>
+              ) : (
+                <div className="h-[200px] flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#009966]"></div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-sm text-[#4a5565]">Menunggu Verifikasi</span>
-                  </div>
-                  <span className="text-sm font-medium text-[#101828]">3</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Paket Tour Terpopuler */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-[#101828] mb-6">
-              Paket Tour Terpopuler Bulan Ini
-            </h3>
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-[#101828]">
+                Paket Tour Terpopuler Bulan Ini
+              </h3>
+              <Link href="/admin/paket" className="text-sm text-[#009966] hover:underline">
+                Lihat Semua →
+              </Link>
+            </div>
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-400 w-32">Bali 5D4N</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-8">
-                  <div className="bg-emerald-500 h-8 rounded-full" style={{ width: '85%' }}></div>
+              {[
+                { name: 'Bali 5D4N', percentage: 85, bookings: 24, color: 'from-emerald-500 to-emerald-600' },
+                { name: 'Bromo 3D2N', percentage: 65, bookings: 18, color: 'from-blue-500 to-blue-600' },
+                { name: 'Yogyakarta 4D3N', percentage: 50, bookings: 14, color: 'from-purple-500 to-purple-600' },
+                { name: 'Raja Ampat 6D5N', percentage: 35, bookings: 10, color: 'from-amber-500 to-amber-600' }
+              ].map((tour, idx) => (
+                <div key={idx} className="group">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-[#101828]">{tour.name}</span>
+                    <span className="text-xs text-gray-500">{tour.bookings} booking</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className={`bg-gradient-to-r ${tour.color} h-3 rounded-full transition-all duration-1000 ease-out group-hover:opacity-80`}
+                        style={{ width: mounted ? `${tour.percentage}%` : '0%' }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-600 w-12 text-right">{tour.percentage}%</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-400 w-32">Bromo 3D2N</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-8">
-                  <div className="bg-emerald-500 h-8 rounded-full" style={{ width: '65%' }}></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-400 w-32">Yogyakarta 4D3N</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-8">
-                  <div className="bg-emerald-500 h-8 rounded-full" style={{ width: '50%' }}></div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-400 w-32">Raja Ampat 6D5N</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-8">
-                  <div className="bg-emerald-500 h-8 rounded-full" style={{ width: '35%' }}></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* Bottom Section */}
           <div className="grid grid-cols-3 gap-6">
             {/* Booking Terbaru */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
+            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-[#101828]">Booking Terbaru</h3>
-                <Link href="/admin/pemesanan" className="text-sm text-[#009966] hover:underline">
-                  Lihat Semua →
+                <Link href="/admin/pemesanan" className="text-sm text-[#009966] hover:underline flex items-center gap-1">
+                  Lihat Semua
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
               <div className="space-y-3">
@@ -281,7 +386,7 @@ export default function AdminDashboard() {
                   <p className="text-center text-gray-400 py-8">Belum ada booking terbaru</p>
                 ) : (
                   recentBookings.map((booking) => (
-                    <div key={booking.id} className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
+                    <div key={booking.id} className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between hover:border-[#009966] hover:shadow-md transition-all duration-300 cursor-pointer">
                       <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                           booking.status === 'confirmed' ? 'bg-emerald-100' : 
@@ -317,16 +422,24 @@ export default function AdminDashboard() {
             </div>
 
             {/* Keberangkatan Terdekat */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold text-[#101828] mb-6">
-                Keberangkatan Terdekat
-              </h3>
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-[#101828]">
+                  Keberangkatan Terdekat
+                </h3>
+                <Link href="/admin/penjadwalan" className="text-sm text-[#009966] hover:underline flex items-center gap-1">
+                  Lihat Semua
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
               <div className="space-y-4">
                 {upcomingDepartures.length === 0 ? (
                   <p className="text-center text-gray-400 py-8">Belum ada keberangkatan mendatang</p>
                 ) : (
                   upcomingDepartures.map((departure) => (
-                    <div key={departure.id} className="border border-gray-200 rounded-2xl p-4">
+                    <div key={departure.id} className="border border-gray-200 rounded-2xl p-4 hover:border-[#009966] hover:shadow-md transition-all duration-300 cursor-pointer">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">

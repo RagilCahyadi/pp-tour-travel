@@ -6,6 +6,13 @@ export interface DashboardStats {
   pendapatan_bulan_ini: number
   menunggu_verifikasi: number
   keberangkatan_minggu_ini: number
+  total_pelanggan: number
+}
+
+export interface MonthlyBooking {
+  month: string
+  bookings: number
+  revenue: number
 }
 
 export interface RecentBooking {
@@ -30,6 +37,7 @@ export interface UpcomingDeparture {
 
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [monthlyData, setMonthlyData] = useState<MonthlyBooking[]>([])
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
   const [upcomingDepartures, setUpcomingDepartures] = useState<UpcomingDeparture[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,30 +51,135 @@ export function useDashboard() {
     try {
       setLoading(true)
       
-      // Fetch dashboard stats
-      const { data: statsData, error: statsError } = await supabase
-        .from('dashboard_stats')
-        .select('*')
-        .single()
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() - now.getDay())
 
-      if (statsError) throw statsError
-      setStats(statsData)
+      // Fetch booking bulan ini
+      const { count: bookingCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString())
+
+      // Fetch pendapatan bulan ini (hanya dari pembayaran yang sudah verified)
+      const { data: verifiedPayments } = await supabase
+        .from('payments')
+        .select('jumlah_pembayaran')
+        .eq('status', 'verified')
+        .gte('verified_at', startOfMonth.toISOString())
+
+      const pendapatan = verifiedPayments?.reduce((sum, p) => sum + (p.jumlah_pembayaran || 0), 0) || 0
+
+      // Fetch menunggu verifikasi
+      const { count: pendingCount } = await supabase
+        .from('payments')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+
+      // Fetch keberangkatan minggu ini
+      const { count: departureCount } = await supabase
+        .from('schedules')
+        .select('*', { count: 'exact', head: true })
+        .gte('tanggal_keberangkatan', startOfWeek.toISOString())
+        .lte('tanggal_keberangkatan', new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
+
+      // Fetch total pelanggan
+      const { count: customerCount } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true })
+
+      setStats({
+        booking_bulan_ini: bookingCount || 0,
+        pendapatan_bulan_ini: pendapatan,
+        menunggu_verifikasi: pendingCount || 0,
+        keberangkatan_minggu_ini: departureCount || 0,
+        total_pelanggan: customerCount || 0
+      })
+
+      // Fetch 6 months data for chart
+      const monthlyBookings: MonthlyBooking[] = []
+      for (let i = 5; i >= 0; i--) {
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
+        
+        const { count } = await supabase
+          .from('bookings')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', monthStart.toISOString())
+          .lte('created_at', monthEnd.toISOString())
+
+        const { data: monthPayments } = await supabase
+          .from('payments')
+          .select('jumlah_pembayaran, bookings!inner(created_at)')
+          .eq('status', 'verified')
+          .gte('bookings.created_at', monthStart.toISOString())
+          .lte('bookings.created_at', monthEnd.toISOString())
+
+        const revenue = monthPayments?.reduce((sum, p) => sum + (p.jumlah_pembayaran || 0), 0) || 0
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+        monthlyBookings.push({
+          month: monthNames[monthStart.getMonth()],
+          bookings: count || 0,
+          revenue: revenue
+        })
+      }
+      setMonthlyData(monthlyBookings)
 
       // Fetch recent bookings
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('recent_bookings')
-        .select('*')
+      const { data: bookingsData } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          kode_booking,
+          jumlah_pax,
+          status,
+          created_at,
+          customers(nama_pelanggan),
+          tour_packages(nama_paket)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5)
 
-      if (bookingsError) throw bookingsError
-      setRecentBookings(bookingsData || [])
+      const formattedBookings = bookingsData?.map(b => ({
+        id: b.id,
+        kode_booking: b.kode_booking,
+        nama_pelanggan: b.customers?.nama_pelanggan || 'N/A',
+        nama_paket: b.tour_packages?.nama_paket || 'N/A',
+        jumlah_pax: b.jumlah_pax,
+        status: b.status,
+        created_at: b.created_at
+      })) || []
+
+      setRecentBookings(formattedBookings)
 
       // Fetch upcoming departures
-      const { data: departuresData, error: departuresError } = await supabase
-        .from('upcoming_departures')
-        .select('*')
+      const { data: departuresData } = await supabase
+        .from('schedules')
+        .select(`
+          id,
+          kode_jadwal,
+          tanggal_keberangkatan,
+          waktu_keberangkatan,
+          tour_packages(nama_paket),
+          bookings(jumlah_pax, customers(nama_perusahaan))
+        `)
+        .gte('tanggal_keberangkatan', now.toISOString())
+        .order('tanggal_keberangkatan', { ascending: true })
+        .limit(5)
 
-      if (departuresError) throw departuresError
-      setUpcomingDepartures(departuresData || [])
+      const formattedDepartures = departuresData?.map(d => ({
+        id: d.id,
+        kode_jadwal: d.kode_jadwal,
+        nama_paket: d.tour_packages?.nama_paket || 'N/A',
+        tanggal_keberangkatan: d.tanggal_keberangkatan,
+        waktu_keberangkatan: d.waktu_keberangkatan,
+        nama_instansi: d.bookings?.[0]?.customers?.nama_perusahaan || 'N/A',
+        jumlah_pax: d.bookings?.reduce((sum, b) => sum + (b.jumlah_pax || 0), 0) || 0
+      })) || []
+
+      setUpcomingDepartures(formattedDepartures)
 
       setError(null)
     } catch (err: any) {
@@ -79,6 +192,7 @@ export function useDashboard() {
 
   return {
     stats,
+    monthlyData,
     recentBookings,
     upcomingDepartures,
     loading,
