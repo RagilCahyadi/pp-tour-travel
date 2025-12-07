@@ -4,64 +4,39 @@ import AdminSidebar from '@/components/AdminSidebar'
 import { useState } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { useSchedules } from '@/lib/hooks/useSchedules'
+import { useTourPackages } from '@/lib/hooks/useTourPackages'
+import { formatDate } from '@/lib/utils/helpers'
 
 export default function AdminPenjadwalanPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedSchedule, setSelectedSchedule] = useState<number | null>(null)
+  const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null)
   const [formData, setFormData] = useState({
-    paketTour: '',
-    statusLayanan: '',
-    kodeJadwal: '',
-    keberangkatan: ''
+    package_id: '',
+    status: 'aktif' as 'aktif' | 'tidak-aktif' | 'selesai',
+    kode_jadwal: '',
+    tanggal_keberangkatan: '',
+    waktu_keberangkatan: '',
+    nama_instansi: '',
+    catatan: ''
   })
 
-  const schedules = [
-    {
-      id: 1,
-      instalasi: 'PT. Amerta J',
-      paketTour: 'Paket Bali Premium',
-      kode: 'PRE17B',
-      keberangkatan: '17 Juni 2025',
-      status: 'tidak-aktif'
-    },
-    {
-      id: 2,
-      instalasi: 'PT. Amerta J',
-      paketTour: 'Paket Bali Ekonomis',
-      kode: 'EKS15B',
-      keberangkatan: '15 Agustus 2025',
-      status: 'aktif'
-    },
-    {
-      id: 3,
-      instalasi: 'CV. Maju Bersama',
-      paketTour: 'Paket Yogyakarta Premium',
-      kode: 'YOG23C',
-      keberangkatan: '23 Juli 2025',
-      status: 'aktif'
-    },
-    {
-      id: 4,
-      instalasi: 'PT. Sukses Makmur',
-      paketTour: 'Paket Bandung Ekonomis',
-      kode: 'BDG10D',
-      keberangkatan: '10 September 2025',
-      status: 'tidak-aktif'
-    },
-    {
-      id: 5,
-      instalasi: 'CV. Berkah Jaya',
-      paketTour: 'Paket Lombok Premium',
-      kode: 'LMB05E',
-      keberangkatan: '5 Oktober 2025',
-      status: 'aktif'
-    }
-  ]
+  const { schedules, loading, error, createSchedule, updateSchedule, deleteSchedule } = useSchedules()
+  const { packages } = useTourPackages()
 
-  const handleSelectSchedule = (id: number) => {
+  // Generate unique schedule code
+  const generateScheduleCode = () => {
+    const date = new Date()
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    return `SCH${year}${month}${day}${random}`
+  }
+
+  const handleSelectSchedule = (id: string) => {
     if (selectedSchedule === id) {
       setSelectedSchedule(null)
     } else {
@@ -71,9 +46,9 @@ export default function AdminPenjadwalanPage() {
 
   const filteredSchedules = schedules.filter(schedule => {
     const matchesSearch = searchQuery === '' || 
-                         schedule.instalasi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         schedule.paketTour.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         schedule.kode.toLowerCase().includes(searchQuery.toLowerCase())
+                         (schedule.nama_instansi?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                         schedule.tour_packages.nama_paket.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         schedule.kode_jadwal.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesSearch
   })
 
@@ -83,41 +58,31 @@ export default function AdminPenjadwalanPage() {
 
   const handleOpenModal = () => {
     setIsModalOpen(true)
-    setSelectedScheduleId(null)
     setFormData({
-      paketTour: '',
-      statusLayanan: '',
-      kodeJadwal: '',
-      keberangkatan: ''
+      package_id: '',
+      status: 'aktif',
+      kode_jadwal: generateScheduleCode(), // Auto-generate unique code
+      tanggal_keberangkatan: '',
+      waktu_keberangkatan: '',
+      nama_instansi: '',
+      catatan: ''
     })
   }
 
-  const handleEditSchedule = (scheduleId: number) => {
+  const handleEditSchedule = (scheduleId: string) => {
     setIsModalOpen(true)
     
     if (scheduleId) {
       const schedule = schedules.find(s => s.id === scheduleId)
       if (schedule) {
-        setSelectedScheduleId(scheduleId)
-        // Convert date format from "DD Bulan YYYY" to "YYYY-MM-DD"
-        const dateMap: { [key: string]: string } = {
-          'Juni': '06',
-          'Agustus': '08',
-          'Juli': '07',
-          'September': '09',
-          'Oktober': '10'
-        }
-        const dateParts = schedule.keberangkatan.split(' ')
-        const day = dateParts[0].padStart(2, '0')
-        const month = dateMap[dateParts[1]] || '01'
-        const year = dateParts[2]
-        const formattedDate = `${year}-${month}-${day}`
-        
         setFormData({
-          paketTour: schedule.paketTour,
-          statusLayanan: schedule.status,
-          kodeJadwal: schedule.kode,
-          keberangkatan: formattedDate
+          package_id: schedule.package_id,
+          status: schedule.status,
+          kode_jadwal: schedule.kode_jadwal,
+          tanggal_keberangkatan: schedule.tanggal_keberangkatan,
+          waktu_keberangkatan: schedule.waktu_keberangkatan || '',
+          nama_instansi: schedule.nama_instansi || '',
+          catatan: schedule.catatan || ''
         })
       }
     }
@@ -127,24 +92,57 @@ export default function AdminPenjadwalanPage() {
     setIsModalOpen(false)
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = () => {
-    if (selectedScheduleId) {
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!formData.package_id || !formData.kode_jadwal || !formData.tanggal_keberangkatan) {
+      alert('Mohon lengkapi data yang diperlukan (Paket Tour, Kode Jadwal, dan Tanggal Keberangkatan)!')
+      return
+    }
+
+    // Validate package exists
+    const packageExists = packages.find(pkg => pkg.id === formData.package_id)
+    if (!packageExists) {
+      alert('Paket tour tidak valid. Silakan pilih paket tour yang tersedia.')
+      return
+    }
+
+    // Clean data - remove empty strings for optional fields
+    const cleanedData = {
+      package_id: formData.package_id,
+      kode_jadwal: formData.kode_jadwal.trim(),
+      tanggal_keberangkatan: formData.tanggal_keberangkatan,
+      status: formData.status,
+      ...(formData.waktu_keberangkatan && { waktu_keberangkatan: formData.waktu_keberangkatan }),
+      ...(formData.nama_instansi && { nama_instansi: formData.nama_instansi.trim() }),
+      ...(formData.catatan && { catatan: formData.catatan.trim() })
+    }
+
+    console.log('Submitting data:', cleanedData)
+
+    if (selectedSchedule) {
       // Update existing schedule
-      console.log('Updating schedule ID:', selectedScheduleId, 'with data:', formData)
-      // TODO: Implement API call for update
-      alert('Jadwal berhasil diperbarui!')
+      const { error } = await updateSchedule(selectedSchedule, cleanedData)
+      if (error) {
+        alert('❌ Gagal memperbarui jadwal:\n' + error)
+      } else {
+        alert('✅ Jadwal berhasil diperbarui!')
+        handleCloseModal()
+      }
     } else {
       // Create new schedule
-      console.log('Creating new schedule:', formData)
-      // TODO: Implement API call for create
-      alert('Jadwal baru berhasil ditambahkan!')
+      const { error } = await createSchedule(cleanedData)
+      if (error) {
+        alert('❌ Gagal menambahkan jadwal:\n' + error)
+      } else {
+        alert('✅ Jadwal baru berhasil ditambahkan!')
+        handleCloseModal()
+      }
     }
-    handleCloseModal()
   }
 
   const handleDeleteClick = () => {
@@ -153,14 +151,17 @@ export default function AdminPenjadwalanPage() {
     }
   }
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedSchedule) return
     
-    console.log('Deleting schedule:', selectedSchedule)
-    // TODO: Implement API call for delete
-    alert('Jadwal berhasil dihapus!')
-    setSelectedSchedule(null)
-    setIsDeleteModalOpen(false)
+    const { error } = await deleteSchedule(selectedSchedule)
+    if (error) {
+      alert('Gagal menghapus jadwal: ' + error)
+    } else {
+      alert('Jadwal berhasil dihapus!')
+      setSelectedSchedule(null)
+      setIsDeleteModalOpen(false)
+    }
   }
 
   const handleExportPDF = () => {
@@ -196,17 +197,17 @@ export default function AdminPenjadwalanPage() {
     // Prepare table data
     const tableData = selectedData.map((schedule, index) => [
       index + 1,
-      schedule.instalasi,
-      schedule.paketTour,
-      schedule.kode,
-      schedule.keberangkatan,
-      schedule.status === 'aktif' ? 'Aktif' : 'Tidak Aktif'
+      schedule.nama_instansi || '-',
+      schedule.tour_packages.nama_paket,
+      schedule.kode_jadwal,
+      formatDate(schedule.tanggal_keberangkatan),
+      schedule.status === 'aktif' ? 'Aktif' : schedule.status === 'selesai' ? 'Selesai' : 'Tidak Aktif'
     ])
 
     // Add table
     autoTable(doc, {
       startY: 40,
-      head: [['No', 'Instalasi', 'Paket Tour', 'Kode', 'Keberangkatan', 'Status']],
+      head: [['No', 'Instansi', 'Paket Tour', 'Kode', 'Keberangkatan', 'Status']],
       body: tableData,
       theme: 'grid',
       headStyles: {
@@ -257,6 +258,33 @@ export default function AdminPenjadwalanPage() {
 
     // Show success message
     alert(`${selectedData.length} jadwal berhasil diexport ke PDF!`)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar activePage="penjadwalan" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar activePage="penjadwalan" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600">Error: {error}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -351,27 +379,19 @@ export default function AdminPenjadwalanPage() {
             </div>
           </div>
 
-          {/* Search and Filter */}
+          {/* Search */}
           <div className="bg-white border border-gray-100 rounded-[16px] p-6 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative">
-                <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Cari berdasarkan instalasi, paket, atau kode..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-[16.4px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                />
-              </div>
-              <button className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-[16.4px] hover:bg-gray-50 transition-colors">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                <span className="text-[#364153]">Filter Lanjutan</span>
-              </button>
+            <div className="relative">
+              <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Cari berdasarkan instansi, paket, atau kode..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-[16.4px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+              />
             </div>
           </div>
 
@@ -384,7 +404,7 @@ export default function AdminPenjadwalanPage() {
                     <th className="px-6 py-5 text-left">
                       <span className="text-xs font-bold text-[#4a5565] uppercase tracking-wider">Pilih</span>
                     </th>
-                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Instalasi</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Instansi</th>
                     <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Paket Tour</th>
                     <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Kode</th>
                     <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Keberangkatan</th>
@@ -403,11 +423,11 @@ export default function AdminPenjadwalanPage() {
                           className="w-5 h-5 border-gray-300 text-[#009966] focus:ring-[#009966]"
                         />
                       </td>
-                      <td className="px-6 py-6 text-[#101828]">{schedule.instalasi}</td>
-                      <td className="px-6 py-6 text-[#101828]">{schedule.paketTour}</td>
+                      <td className="px-6 py-6 text-[#101828]">{schedule.nama_instansi || '-'}</td>
+                      <td className="px-6 py-6 text-[#101828]">{schedule.tour_packages.nama_paket}</td>
                       <td className="px-6 py-6">
                         <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-[#101828] text-sm font-mono rounded-[10px]">
-                          {schedule.kode}
+                          {schedule.kode_jadwal}
                         </span>
                       </td>
                       <td className="px-6 py-6">
@@ -415,7 +435,7 @@ export default function AdminPenjadwalanPage() {
                           <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-[#101828]">{schedule.keberangkatan}</span>
+                          <span className="text-[#101828]">{formatDate(schedule.tanggal_keberangkatan)} {schedule.waktu_keberangkatan ? `, ${schedule.waktu_keberangkatan}` : ''}</span>
                         </div>
                       </td>
                       <td className="px-6 py-6">
@@ -425,6 +445,13 @@ export default function AdminPenjadwalanPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="text-sm text-[#007a55]">Aktif</span>
+                          </div>
+                        ) : schedule.status === 'selesai' ? (
+                          <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-[#c9d4ff] rounded-full">
+                            <svg className="w-4 h-4 text-[#0055c1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm text-[#0055c1]">Selesai</span>
                           </div>
                         ) : (
                           <div className="inline-flex items-center gap-2 px-3 py-2 bg-red-50 border border-[#ffc9c9] rounded-full">
@@ -436,11 +463,17 @@ export default function AdminPenjadwalanPage() {
                         )}
                       </td>
                       <td className="px-6 py-6">
-                        <button
-                          onClick={() => handleEditSchedule(schedule.id)}
-                          className="text-[#009966] hover:text-[#007a55] font-medium transition-colors">
-                          Edit
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditSchedule(schedule.id)}
+                            className="p-2 text-[#009966] hover:bg-green-50 rounded-lg transition-colors"
+                            title="Edit Jadwal"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -483,7 +516,7 @@ export default function AdminPenjadwalanPage() {
             {/* Modal Header */}
             <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-[#101828]">
-                {selectedScheduleId ? 'Edit Penjadwalan' : 'Tambah Penjadwalan'}
+                {selectedSchedule ? 'Edit Penjadwalan' : 'Tambah Penjadwalan'}
               </h3>
               <button 
                 onClick={handleCloseModal}
@@ -495,70 +528,128 @@ export default function AdminPenjadwalanPage() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  {/* Paket Tour */}
-                  <div>
-                    <label className="block text-sm text-[#364153] mb-2">Paket Tour</label>
-                    <input
-                      type="text"
-                      name="paketTour"
-                      value={formData.paketTour}
-                      onChange={handleInputChange}
-                      placeholder="Paket Bali Premium"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                    />
-                  </div>
-
-                  {/* Kode Jadwal */}
-                  <div>
-                    <label className="block text-sm text-[#364153] mb-2">Kode Jadwal</label>
-                    <input
-                      type="text"
-                      name="kodeJadwal"
-                      value={formData.kodeJadwal}
-                      onChange={handleInputChange}
-                      placeholder="PRE17B"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                    />
-                  </div>
+            <div className="p-6 space-y-4 max-h-[calc(90vh-140px)] overflow-y-auto">
+              {/* Paket Tour */}
+              <div>
+                <label className="block text-sm text-[#364153] mb-2">Paket Tour *</label>
+                <div className="relative">
+                  <select
+                    name="package_id"
+                    value={formData.package_id}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] appearance-none focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                    required>
+                    <option value="">Pilih Paket Tour</option>
+                    {packages.map((pkg) => (
+                      <option key={pkg.id} value={pkg.id}>
+                        {pkg.nama_paket} - {pkg.lokasi} ({pkg.durasi})
+                      </option>
+                    ))}
+                  </select>
+                  <svg className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
+              </div>
 
-                {/* Right Column */}
-                <div className="space-y-4">
-                  {/* Status Layanan */}
-                  <div>
-                    <label className="block text-sm text-[#364153] mb-2">Status Layanan</label>
-                    <div className="relative">
-                      <select
-                        name="statusLayanan"
-                        value={formData.statusLayanan}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] appearance-none focus:outline-none focus:ring-2 focus:ring-[#009966]">
-                        <option value="">Pilih Status</option>
-                        <option value="aktif">Aktif</option>
-                        <option value="tidak-aktif">Tidak Aktif</option>
-                      </select>
-                      <svg className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <div className="grid grid-cols-2 gap-4">
+                {/* Kode Jadwal */}
+                <div>
+                  <label className="block text-sm text-[#364153] mb-2">Kode Jadwal *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="kode_jadwal"
+                      value={formData.kode_jadwal}
+                      onChange={handleInputChange}
+                      placeholder="SCH20250115001"
+                      className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, kode_jadwal: generateScheduleCode() }))}
+                      className="px-3 py-3 bg-gray-100 border border-gray-200 rounded-[10px] hover:bg-gray-200 transition-colors"
+                      title="Generate Kode Baru"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                    </div>
-                  </div>
-
-                  {/* Keberangkatan */}
-                  <div>
-                    <label className="block text-sm text-[#364153] mb-2">Keberangkatan</label>
-                    <input
-                      type="date"
-                      name="keberangkatan"
-                      value={formData.keberangkatan}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                    />
+                    </button>
                   </div>
                 </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-sm text-[#364153] mb-2">Status</label>
+                  <div className="relative">
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] appearance-none focus:outline-none focus:ring-2 focus:ring-[#009966]">
+                      <option value="aktif">Aktif</option>
+                      <option value="tidak-aktif">Tidak Aktif</option>
+                      <option value="selesai">Selesai</option>
+                    </select>
+                    <svg className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Tanggal Keberangkatan */}
+                <div>
+                  <label className="block text-sm text-[#364153] mb-2">Tanggal Keberangkatan *</label>
+                  <input
+                    type="date"
+                    name="tanggal_keberangkatan"
+                    value={formData.tanggal_keberangkatan}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                    required
+                  />
+                </div>
+
+                {/* Waktu Keberangkatan */}
+                <div>
+                  <label className="block text-sm text-[#364153] mb-2">Waktu Keberangkatan</label>
+                  <input
+                    type="time"
+                    name="waktu_keberangkatan"
+                    value={formData.waktu_keberangkatan}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                  />
+                </div>
+              </div>
+
+              {/* Nama Instansi */}
+              <div>
+                <label className="block text-sm text-[#364153] mb-2">Nama Instansi</label>
+                <input
+                  type="text"
+                  name="nama_instansi"
+                  value={formData.nama_instansi}
+                  onChange={handleInputChange}
+                  placeholder="PT. Contoh Perusahaan"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                />
+              </div>
+
+              {/* Catatan */}
+              <div>
+                <label className="block text-sm text-[#364153] mb-2">Catatan</label>
+                <textarea
+                  name="catatan"
+                  value={formData.catatan}
+                  onChange={handleInputChange}
+                  placeholder="Catatan tambahan..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966] resize-none"
+                />
               </div>
             </div>
 

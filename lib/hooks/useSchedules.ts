@@ -89,23 +89,47 @@ export function useSchedules(statusFilter?: string) {
 
   const createSchedule = async (scheduleData: CreateScheduleData) => {
     try {
+      console.log('Creating schedule with data:', scheduleData)
+      
       const { data, error } = await supabase
         .from('schedules')
         .insert([scheduleData as any])
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error (full):', JSON.stringify(error, null, 2))
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        console.error('Error details:', error.details)
+        console.error('Error hint:', error.hint)
+        
+        // Handle duplicate key error
+        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
+          throw new Error('Kode jadwal sudah digunakan. Silakan gunakan kode jadwal yang berbeda.')
+        }
+        
+        // Handle other specific errors
+        if (error.code === '23503') {
+          throw new Error('Paket tour tidak ditemukan. Silakan pilih paket tour yang valid.')
+        }
+        
+        throw new Error(error.message || error.hint || 'Gagal membuat jadwal')
+      }
+      
       await fetchSchedules()
       return { data, error: null }
     } catch (err: any) {
-      console.error('Error creating schedule:', err)
-      return { data: null, error: err.message }
+      console.error('Error creating schedule (full):', err)
+      const errorMessage = err?.message || err?.error_description || 'Terjadi kesalahan saat membuat jadwal'
+      return { data: null, error: errorMessage }
     }
   }
 
   const updateSchedule = async (id: string, scheduleData: Partial<CreateScheduleData>) => {
     try {
+      console.log('Updating schedule with data:', scheduleData)
+      
       const { data, error } = await supabase
         .from('schedules')
         .update(scheduleData as any)
@@ -113,12 +137,30 @@ export function useSchedules(statusFilter?: string) {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error (full):', JSON.stringify(error, null, 2))
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        
+        // Handle duplicate key error
+        if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
+          throw new Error('Kode jadwal sudah digunakan. Silakan gunakan kode jadwal yang berbeda.')
+        }
+        
+        // Handle foreign key error
+        if (error.code === '23503') {
+          throw new Error('Paket tour tidak ditemukan. Silakan pilih paket tour yang valid.')
+        }
+        
+        throw new Error(error.message || error.hint || 'Gagal memperbarui jadwal')
+      }
+      
       await fetchSchedules()
       return { data, error: null }
     } catch (err: any) {
-      console.error('Error updating schedule:', err)
-      return { data: null, error: err.message }
+      console.error('Error updating schedule (full):', err)
+      const errorMessage = err?.message || err?.error_description || 'Terjadi kesalahan saat memperbarui jadwal'
+      return { data: null, error: errorMessage }
     }
   }
 

@@ -4,6 +4,7 @@ import AdminSidebar from '@/components/AdminSidebar'
 import { useState } from 'react'
 import { usePayments } from '@/lib/hooks/usePayments'
 import { formatRupiah } from '@/lib/utils/helpers'
+import { supabase } from '@/lib/supabase'
 
 export default function AdminPembayaranPage() {
   const [selectedTab, setSelectedTab] = useState('all')
@@ -34,19 +35,35 @@ export default function AdminPembayaranPage() {
       return
     }
     
-    if (!selectedPayment) return
+    if (!selectedPayment) {
+      alert('Tidak ada pembayaran yang dipilih!')
+      return
+    }
     
     try {
-      await verifyPayment(selectedPayment, 'admin-user-id', verificationNote)
+      // For now, use null for verified_by (allowed by schema: ON DELETE SET NULL)
+      // This avoids auth session issues while still allowing payment verification
+      const result = await verifyPayment(selectedPayment, null, verificationNote)
       
-      alert(`✅ Pembayaran berhasil diverifikasi!`)
-      setSelectedPayment(null)
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      // Close modal
       setIsVerifyModalOpen(false)
       setVerificationNote('')
-      await refetch()
+      setSelectedPayment(null)
+      
+      // Switch to "Semua" tab to show the verified payment
+      // (If we stay on "Menunggu" tab, the verified payment will disappear from the list)
+      setSelectedTab('all')
+      
+      // Refresh data will happen automatically via useEffect when selectedTab changes
+      
+      alert(`✅ Pembayaran berhasil diverifikasi!\n\n💡 Anda dipindahkan ke tab "Semua" untuk melihat pembayaran yang sudah diverifikasi.`)
     } catch (err: any) {
       console.error('Error verifying payment:', err)
-      alert(`❌ Gagal memverifikasi pembayaran: ${err.message}`)
+      alert(`❌ Gagal memverifikasi pembayaran:\n${err.message || err}`)
     }
   }
 
@@ -251,27 +268,19 @@ export default function AdminPembayaranPage() {
             </div>
           </div>
 
-          {/* Search and Filter */}
+          {/* Search */}
           <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 relative">
-                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari berdasarkan nama, perusahaan, atau kode booking..."
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#009966] placeholder:text-gray-400"
-                />
-              </div>
-              <button className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-2xl text-[#364153] hover:bg-gray-50 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                <span>Filter Lanjutan</span>
-              </button>
+            <div className="relative">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari berdasarkan nama, perusahaan, atau kode booking..."
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#009966] placeholder:text-gray-400"
+              />
             </div>
           </div>
 
@@ -606,7 +615,7 @@ export default function AdminPembayaranPage() {
 
               {/* Verification Note */}
               <div>
-                <label className="block text-sm text-[#364153] mb-2">Catatan Verifikasi (Opsional)</label>
+                <label className="block text-sm text-[#364153] mb-2">Catatan Verifikasi</label>
                 <textarea
                   value={verificationNote}
                   onChange={(e) => setVerificationNote(e.target.value)}

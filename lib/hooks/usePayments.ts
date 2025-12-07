@@ -103,19 +103,21 @@ export function usePayments(statusFilter?: string) {
     }
   }
 
-  const verifyPayment = async (id: string, userId: string, catatan?: string) => {
+  const verifyPayment = async (id: string, userId: string | null, catatan?: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('payments')
         .update({
           status: 'verified',
           verified_by: userId,
           verified_at: new Date().toISOString(),
-          catatan_verifikasi: catatan
+          catatan_verifikasi: catatan || null
         })
         .eq('id', id)
+        .select()
 
       if (error) throw error
+      
       await fetchPayments()
       return { error: null }
     } catch (err: any) {
@@ -124,19 +126,21 @@ export function usePayments(statusFilter?: string) {
     }
   }
 
-  const rejectPayment = async (id: string, userId: string, catatan?: string) => {
+  const rejectPayment = async (id: string, userId: string | null, catatan?: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('payments')
         .update({
           status: 'rejected',
           verified_by: userId,
           verified_at: new Date().toISOString(),
-          catatan_verifikasi: catatan
+          catatan_verifikasi: catatan || null
         })
         .eq('id', id)
+        .select()
 
       if (error) throw error
+      
       await fetchPayments()
       return { error: null }
     } catch (err: any) {
