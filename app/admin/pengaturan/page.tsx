@@ -2,51 +2,235 @@
 
 import AdminSidebar from '@/components/AdminSidebar'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
+import { supabase } from '@/lib/supabase'
+
+interface ProfileData {
+  nama: string
+  hakAkses: string
+  negara: string
+  kota: string
+  alamat: string
+  email: string
+  nomorHp: string
+  bahasa: string
+  zonaWaktu: string
+  fotoProfil?: string
+}
+
+interface UserData {
+  id: string
+  email_address: string | null
+  username: string | null
+  first_name: string | null
+  last_name: string | null
+  profile_image_url: string | null
+  created_at: string
+  is_admin: boolean
+  banned_at: string | null
+}
 
 export default function AdminPengaturanPage() {
-  const [profileData, setProfileData] = useState({
-    nama: 'Gatot Subroto',
+  const { user, isLoaded } = useUser()
+  const [profileData, setProfileData] = useState<ProfileData>({
+    nama: '',
     hakAkses: 'Admin-1',
     negara: 'Indonesia',
-    kota: 'Gresik',
-    alamat: 'Jalan Raya Kebomas',
-    email: 'admin1@gmail.com',
-    nomorHp: '088176847238',
+    kota: '',
+    alamat: '',
+    email: '',
+    nomorHp: '',
     bahasa: 'id',
     zonaWaktu: 'GMT+7'
   })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [profileId, setProfileId] = useState<string | null>(null)
+  
+  // User Management states
+  const [users, setUsers] = useState<UserData[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [updatingUser, setUpdatingUser] = useState<string | null>(null)
 
-  const [companyData, setCompanyData] = useState({
-    namaPerusahaan: 'PP Tour Travel',
-    alamatKantor: 'Jl. Raya Kebomas No. 123, Gresik, Jawa Timur',
-    teleponKantor: '031-1234567',
-    whatsappBisnis: '6281234567890',
-    emailBisnis: 'info@pptourtravel.com'
-  })
+  // Fetch profile data from Supabase
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!isLoaded || !user?.id) return
 
-  const [notifications, setNotifications] = useState({
-    email: true,
-    bookingBaru: true,
-    pembayaran: true,
-    laporanMingguan: false
-  })
+      try {
+        setLoading(true)
+        
+        // Fetch admin profile
+        const { data: profile, error } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error)
+          return
+        }
+
+        if (profile) {
+          setProfileId(profile.id)
+          setProfileData({
+            nama: profile.nama || '',
+            hakAkses: profile.hak_akses || 'Admin-1',
+            negara: profile.negara || 'Indonesia',
+            kota: profile.kota || '',
+            alamat: profile.alamat || '',
+            email: profile.email || user.primaryEmailAddress?.emailAddress || '',
+            nomorHp: profile.nomor_hp || '',
+            bahasa: profile.bahasa || 'id',
+            zonaWaktu: profile.zona_waktu || 'GMT+7',
+            fotoProfil: profile.foto_profil_url || user.imageUrl
+          })
+        } else {
+          // Profile doesn't exist, set default data from user info
+          // Don't create profile automatically, just populate form
+          console.log('Profile not found, using default data from Clerk user')
+          setProfileData({
+            nama: user.fullName || user.firstName || 'Admin',
+            hakAkses: 'Admin-1',
+            negara: 'Indonesia',
+            kota: '',
+            alamat: '',
+            email: user.primaryEmailAddress?.emailAddress || '',
+            nomorHp: '',
+            bahasa: 'id',
+            zonaWaktu: 'GMT+7',
+            fotoProfil: user.imageUrl
+          })
+        }
+      } catch (error) {
+        console.error('Error in fetchProfile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [user, isLoaded])
+
+  // Fetch all users for User Management
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!isLoaded || !user?.id) return
+
+      try {
+        setLoadingUsers(true)
+        
+        // Use API route to bypass RLS since we're using Clerk auth
+        const response = await fetch('/api/admin/users')
+        
+        if (!response.ok) {
+          console.error('Error fetching users:', response.statusText)
+          return
+        }
+        
+        const data = await response.json()
+        
+        if (data.users) {
+          setUsers(data.users)
+        }
+      } catch (error) {
+        console.error('Error in fetchUsers:', error)
+      } finally {
+        setLoadingUsers(false)
+      }
+    }
+
+    fetchUsers()
+  }, [user, isLoaded])
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setProfileData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setCompanyData(prev => ({ ...prev, [name]: value }))
+  const handleToggleAdmin = async (userId: string, currentStatus: boolean) => {
+    if (!confirm(`Apakah Anda yakin ingin ${currentStatus ? 'mencabut' : 'memberikan'} hak admin untuk user ini?`)) {
+      return
+    }
+
+    try {
+      setUpdatingUser(userId)
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetUserId: userId,
+          updateData: { is_admin: !currentStatus }
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update admin status')
+      }
+
+      // Update local state
+      setUsers(users.map(u => 
+        u.id === userId ? { ...u, is_admin: !currentStatus } : u
+      ))
+      alert('Status admin berhasil diubah!')
+    } catch (error) {
+      console.error('Error toggling admin:', error)
+      alert('Terjadi kesalahan saat mengubah status admin: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setUpdatingUser(null)
+    }
   }
 
-  const handleNotificationToggle = (key: string) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))
+  const handleBanUser = async (userId: string, currentBanStatus: string | null) => {
+    const isBanned = currentBanStatus !== null
+    
+    if (!confirm(`Apakah Anda yakin ingin ${isBanned ? 'membuka ban' : 'memban'} user ini?`)) {
+      return
+    }
+
+    try {
+      setUpdatingUser(userId)
+
+      const updateData = {
+        banned_at: isBanned ? null : new Date().toISOString()
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetUserId: userId,
+          updateData
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update ban status')
+      }
+
+      // Update local state
+      setUsers(users.map(u => 
+        u.id === userId ? { ...u, banned_at: updateData.banned_at } : u
+      ))
+      alert(`User berhasil ${isBanned ? 'dibuka ban' : 'diban'}!`)
+    } catch (error) {
+      console.error('Error banning user:', error)
+      alert('Terjadi kesalahan saat mengubah status ban: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setUpdatingUser(null)
+    }
   }
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     // Validate required fields
     if (!profileData.nama || !profileData.email || !profileData.nomorHp) {
       alert('Mohon lengkapi nama, email, dan nomor HP!')
@@ -58,26 +242,68 @@ export default function AdminPengaturanPage() {
       alert('Format email tidak valid!')
       return
     }
-    console.log('Saving profile:', profileData)
-    // TODO: Implement API call to save profile
-    alert('Profil berhasil diperbarui!')
-  }
 
-  const handleSaveCompany = () => {
-    // Validate required fields
-    if (!companyData.namaPerusahaan || !companyData.emailBisnis) {
-      alert('Mohon lengkapi nama perusahaan dan email bisnis!')
+    if (!user?.id) {
+      alert('User tidak ditemukan!')
       return
     }
-    console.log('Saving company:', companyData)
-    // TODO: Implement API call to save company settings
-    alert('Pengaturan perusahaan berhasil diperbarui!')
+
+    try {
+      setSaving(true)
+
+      const profileDataToSave = {
+        user_id: user.id,
+        nama: profileData.nama,
+        hak_akses: profileData.hakAkses,
+        negara: profileData.negara,
+        kota: profileData.kota,
+        alamat: profileData.alamat,
+        email: profileData.email,
+        nomor_hp: profileData.nomorHp,
+        bahasa: profileData.bahasa,
+        zona_waktu: profileData.zonaWaktu,
+        foto_profil_url: profileData.fotoProfil || user.imageUrl
+      }
+
+      // Use upsert to create or update profile
+      const { data, error } = await supabase
+        .from('admin_profiles')
+        .upsert(profileDataToSave, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error saving profile:', error)
+        alert('Gagal menyimpan profil: ' + error.message)
+      } else {
+        if (data) {
+          setProfileId(data.id)
+        }
+        alert('Profil berhasil disimpan!')
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      alert('Terjadi kesalahan saat menyimpan profil')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleSaveNotifications = () => {
-    console.log('Saving notifications:', notifications)
-    // TODO: Implement API call to save notification preferences
-    alert('Preferensi notifikasi berhasil disimpan!')
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar activePage="pengaturan" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966]"></div>
+            <p className="mt-4 text-[#6a7282]">Memuat data profil...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -91,7 +317,7 @@ export default function AdminPengaturanPage() {
           {/* Header */}
           <div>
             <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Pengaturan Profil</h1>
-            <p className="text-[#6a7282] text-base">Kelola profil, keamanan, dan preferensi akun Anda</p>
+            <p className="text-[#6a7282] text-base">Kelola profil dan preferensi akun Anda</p>
           </div>
 
           {/* Profil Admin Section */}
@@ -119,27 +345,34 @@ export default function AdminPengaturanPage() {
                   <label className="block text-sm text-[#364153] mb-3">Foto Profil</label>
                   <div className="flex flex-col items-center space-y-4">
                     <div className="relative w-32 h-32">
-                      <div className="w-32 h-32 rounded-full border-4 border-[#d0fae5] overflow-hidden shadow-md">
-                        <Image
-                          src="https://www.figma.com/api/mcp/asset/6501e1a0-3a9f-4561-b69e-eeda69df911c"
-                          alt="Profile"
-                          width={128}
-                          height={128}
-                          className="object-cover"
-                        />
+                      <div className="w-32 h-32 rounded-full border-4 border-[#d0fae5] overflow-hidden shadow-md bg-gray-100">
+                        {(profileData.fotoProfil || user?.imageUrl) ? (
+                          <Image
+                            src={profileData.fotoProfil || user?.imageUrl || ''}
+                            alt="Profile"
+                            width={128}
+                            height={128}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#009966] text-white text-4xl font-bold">
+                            {profileData.nama.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="flex items-center gap-2 px-4 py-2 bg-[#009966] text-white text-sm rounded-[10px] hover:opacity-90 transition-opacity">
+                      <button 
+                        type="button"
+                        disabled
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-500 text-sm rounded-[10px] cursor-not-allowed">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
                         Unggah Gambar
                       </button>
-                      <button className="px-4 py-2 bg-red-50 border border-[#ffc9c9] text-[#e7000b] text-sm rounded-[10px] hover:bg-red-100 transition-colors">
-                        Hapus
-                      </button>
                     </div>
+                    <p className="text-xs text-[#6a7282] text-center">Foto profil dikelola melalui akun Clerk Anda</p>
                   </div>
                 </div>
 
@@ -252,382 +485,198 @@ export default function AdminPengaturanPage() {
                 <div className="mt-6 flex justify-end">
                   <button 
                     onClick={handleSaveProfile}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Simpan
+                    disabled={saving}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Simpan
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Security & Active Sessions Section */}
+          {/* User Management Section */}
           <div className="bg-white border border-gray-100 rounded-[16px] shadow-lg overflow-hidden">
-            {/* Header with Red Gradient */}
-            <div className="bg-gradient-to-r from-[#e7000b] to-[#fb2c36] px-6 py-4">
+            {/* Header with Orange Gradient */}
+            <div className="bg-gradient-to-r from-[#fb923c] to-[#f97316] px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-white/20 rounded-[16.4px] p-2.5">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight">Keamanan & Sesi Aktif</h2>
-                    <p className="text-[#ffe2e2]">Kelola perangkat yang terhubung dengan akun Anda</p>
+                    <h2 className="text-3xl font-bold text-white tracking-tight">User Management</h2>
+                    <p className="text-orange-100">Kelola akun pengguna dan hak akses</p>
                   </div>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white/20 border border-white/30 text-white text-sm rounded-[10px] hover:bg-white/30 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-[10px]">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  Keluar dari Semua Perangkat
-                </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* OAuth Notice */}
-              <div className="bg-blue-50 border border-[#bedbff] rounded-[16.4px] p-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 rounded-[10px] p-2.5">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[#101828] font-medium">Login dengan Google OAuth</p>
-                    <p className="text-[#4a5565] text-sm">Akun Anda dilindungi oleh Google. Keamanan password dikelola melalui akun Google Anda.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Connected Devices */}
-              <div>
-                <h3 className="text-xl font-semibold text-[#364153] mb-4">Perangkat yang Terhubung</h3>
-                <div className="space-y-3">
-                  {/* Device 1 - Current */}
-                  <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-blue-100 rounded-[16.4px] p-3">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-[#101828] font-medium">Windows PC</p>
-                          <span className="px-2 py-0.5 bg-[#d0fae5] text-[#007a55] text-xs rounded">Perangkat Ini</span>
-                        </div>
-                        <p className="text-[#6a7282] text-sm">Chrome 120 • Gresik, Jawa Timur</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <svg className="w-3 h-3 text-[#99a1af]" fill="currentColor" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="8" />
-                          </svg>
-                          <span className="text-[#99a1af] text-sm">Aktif sekarang</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Device 2 - iPhone */}
-                  <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-purple-100 rounded-[16.4px] p-3">
-                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-[#101828] font-medium mb-1">iPhone 13</p>
-                        <p className="text-[#6a7282] text-sm">Safari • Surabaya, Jawa Timur</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <svg className="w-3 h-3 text-[#99a1af]" fill="currentColor" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="8" />
-                          </svg>
-                          <span className="text-[#99a1af] text-sm">2 jam yang lalu</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-[#ffc9c9] text-[#e7000b] text-sm rounded-[10px] hover:bg-red-100 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Keluarkan
-                    </button>
-                  </div>
-
-                  {/* Device 3 - MacBook */}
-                  <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-blue-100 rounded-[16.4px] p-3">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-[#101828] font-medium mb-1">MacBook Pro</p>
-                        <p className="text-[#6a7282] text-sm">Chrome 119 • Jakarta, DKI Jakarta</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <svg className="w-3 h-3 text-[#99a1af]" fill="currentColor" viewBox="0 0 20 20">
-                            <circle cx="10" cy="10" r="8" />
-                          </svg>
-                          <span className="text-[#99a1af] text-sm">1 hari yang lalu</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-[#ffc9c9] text-[#e7000b] text-sm rounded-[10px] hover:bg-red-100 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Keluarkan
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Security Tips */}
-              <div className="bg-amber-50 border border-[#fee685] rounded-[16.4px] p-4">
-                <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <p className="text-[#101828] font-medium mb-1">Tips Keamanan</p>
-                    <ul className="text-[#4a5565] text-xs space-y-1">
-                      <li>• Jika Anda melihat aktivitas yang mencurigakan, segera keluarkan perangkat tersebut</li>
-                      <li>• Pastikan Anda logout setelah menggunakan perangkat umum atau bersama</li>
-                      <li>• Gunakan koneksi internet yang aman saat mengakses dashboard</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Company Settings Section */}
-          <div className="bg-white border border-gray-100 rounded-[16px] shadow-lg overflow-hidden">
-            {/* Header with Blue Gradient */}
-            <div className="bg-gradient-to-r from-[#155dfc] to-[#2b7fff] px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 rounded-[16.4px] p-2.5">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Pengaturan Perusahaan</h2>
-                  <p className="text-blue-100">Informasi travel agency dan kontak bisnis</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 grid grid-cols-3 gap-6">
-              {/* Left Column - Company Logo */}
-              <div className="border border-gray-100 rounded-[16.4px] p-6">
-                <label className="block text-sm text-[#364153] mb-3">Logo Perusahaan</label>
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="w-32 h-32 border-2 border-gray-200 rounded-[16.4px] flex items-center justify-center bg-white shadow-md">
-                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-[#155dfc] text-white text-sm rounded-[10px] hover:opacity-90 transition-opacity">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    Upload Logo
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Column - Business Information */}
-              <div className="col-span-2 border border-gray-100 rounded-[16.4px] p-6">
-                <h3 className="text-xl font-semibold text-[#364153] mb-6">Informasi Bisnis</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs text-[#6a7282] mb-2">Nama Perusahaan</label>
-                    <input
-                      type="text"
-                      name="namaPerusahaan"
-                      value={companyData.namaPerusahaan}
-                      onChange={handleCompanyChange}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#155dfc]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#6a7282] mb-2">Alamat Kantor</label>
-                    <textarea
-                      name="alamatKantor"
-                      value={companyData.alamatKantor}
-                      onChange={handleCompanyChange}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#155dfc] resize-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-[#6a7282] mb-2">Telepon Kantor</label>
-                      <input
-                        type="tel"
-                        name="teleponKantor"
-                        value={companyData.teleponKantor}
-                        onChange={handleCompanyChange}
-                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#155dfc]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#6a7282] mb-2">WhatsApp Bisnis</label>
-                      <input
-                        type="tel"
-                        name="whatsappBisnis"
-                        value={companyData.whatsappBisnis}
-                        onChange={handleCompanyChange}
-                        placeholder="6281234567890"
-                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#155dfc]"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-[#6a7282] mb-2">Email Bisnis</label>
-                    <input
-                      type="email"
-                      name="emailBisnis"
-                      value={companyData.emailBisnis}
-                      onChange={handleCompanyChange}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#155dfc]"
-                    />
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-end">
-                  <button 
-                    onClick={handleSaveCompany}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#155dfc] to-[#2b7fff] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Simpan
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Notification Preferences Section */}
-          <div className="bg-white border border-gray-100 rounded-[16px] shadow-lg overflow-hidden">
-            {/* Header with Purple Gradient */}
-            <div className="bg-gradient-to-r from-[#9810fa] to-[#ad46ff] px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 rounded-[16.4px] p-2.5">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white tracking-tight">Preferensi Notifikasi</h2>
-                  <p className="text-purple-100">Atur notifikasi email untuk berbagai aktivitas</p>
+                  <span className="text-white font-semibold">{users.length} Users</span>
                 </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="p-6">
-              <div className="max-w-2xl space-y-3">
-                {/* Notification Item 1 */}
-                <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-[#d0fae5] rounded-[10px] p-2.5">
-                      <svg className="w-5 h-5 text-[#009966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[#101828] font-medium">Notifikasi Email</p>
-                      <p className="text-[#6a7282] text-sm">Terima notifikasi melalui email</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationToggle('email')}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${notifications.email ? 'bg-[#009966]' : 'bg-gray-200'}`}>
-                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications.email ? 'translate-x-5' : ''}`} />
-                  </button>
+              {loadingUsers ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#fb923c]"></div>
+                  <p className="mt-4 text-[#6a7282]">Memuat data users...</p>
                 </div>
-
-                {/* Notification Item 2 */}
-                <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 rounded-[10px] p-2.5">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[#101828] font-medium">Alert Booking Baru</p>
-                      <p className="text-[#6a7282] text-sm">Notifikasi saat ada booking baru</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationToggle('bookingBaru')}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${notifications.bookingBaru ? 'bg-[#009966]' : 'bg-gray-200'}`}>
-                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications.bookingBaru ? 'translate-x-5' : ''}`} />
-                  </button>
-                </div>
-
-                {/* Notification Item 3 */}
-                <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-[#fef3c6] rounded-[10px] p-2.5">
-                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[#101828] font-medium">Alert Pembayaran</p>
-                      <p className="text-[#6a7282] text-sm">Notifikasi saat ada pembayaran menunggu verifikasi</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationToggle('pembayaran')}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${notifications.pembayaran ? 'bg-[#009966]' : 'bg-gray-200'}`}>
-                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications.pembayaran ? 'translate-x-5' : ''}`} />
-                  </button>
-                </div>
-
-                {/* Notification Item 4 */}
-                <div className="border border-gray-200 rounded-[16.4px] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gray-100 rounded-[10px] p-2.5">
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[#101828] font-medium">Laporan Mingguan</p>
-                      <p className="text-[#6a7282] text-sm">Terima ringkasan laporan setiap minggu</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationToggle('laporanMingguan')}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${notifications.laporanMingguan ? 'bg-[#009966]' : 'bg-gray-200'}`}>
-                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications.laporanMingguan ? 'translate-x-5' : ''}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end max-w-2xl">
-                <button 
-                  onClick={handleSaveNotifications}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#9810fa] to-[#ad46ff] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : users.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                  Simpan Preferensi
-                </button>
-              </div>
+                  <p className="text-[#6a7282]">Tidak ada user yang ditemukan</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[#364153]">User</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[#364153]">Email</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[#364153]">Username</th>
+                        <th className="text-center py-3 px-4 text-sm font-semibold text-[#364153]">Tanggal Bergabung</th>
+                        <th className="text-center py-3 px-4 text-sm font-semibold text-[#364153]">Status</th>
+                        <th className="text-center py-3 px-4 text-sm font-semibold text-[#364153]">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((userData) => {
+                        const isBanned = userData.banned_at !== null
+                        const isCurrentUser = userData.id === user?.id
+                        const isUpdating = updatingUser === userData.id
+
+                        return (
+                          <tr key={userData.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-4 px-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                  {userData.profile_image_url ? (
+                                    <Image
+                                      src={userData.profile_image_url}
+                                      alt={userData.first_name || 'User'}
+                                      width={40}
+                                      height={40}
+                                      className="object-cover w-full h-full"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-[#fb923c] text-white font-semibold">
+                                      {(userData.first_name || userData.email_address || 'U').charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-[#101828]">
+                                    {userData.first_name || userData.last_name 
+                                      ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
+                                      : 'No Name'}
+                                  </p>
+                                  {isCurrentUser && (
+                                    <span className="text-xs text-[#fb923c] font-medium">You</span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-sm text-[#6a7282]">
+                              {userData.email_address || '-'}
+                            </td>
+                            <td className="py-4 px-4 text-sm text-[#6a7282]">
+                              {userData.username || '-'}
+                            </td>
+                            <td className="py-4 px-4 text-center text-sm text-[#6a7282]">
+                              {new Date(userData.created_at).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col items-center gap-1">
+                                {userData.is_admin && (
+                                  <span className="px-2 py-1 bg-[#d0fae5] text-[#007a55] text-xs font-medium rounded">
+                                    Admin
+                                  </span>
+                                )}
+                                {isBanned && (
+                                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+                                    Banned
+                                  </span>
+                                )}
+                                {!userData.is_admin && !isBanned && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                    User
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleToggleAdmin(userData.id, userData.is_admin)}
+                                  disabled={isCurrentUser || isUpdating}
+                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${
+                                    userData.is_admin
+                                      ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
+                                      : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'
+                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title={isCurrentUser ? 'Tidak dapat mengubah status admin sendiri' : ''}
+                                >
+                                  {isUpdating ? (
+                                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                  ) : (
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                  )}
+                                  {userData.is_admin ? 'Cabut Admin' : 'Jadikan Admin'}
+                                </button>
+                                
+                                <button
+                                  onClick={() => handleBanUser(userData.id, userData.banned_at)}
+                                  disabled={isCurrentUser || isUpdating}
+                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${
+                                    isBanned
+                                      ? 'bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100'
+                                      : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title={isCurrentUser ? 'Tidak dapat memban diri sendiri' : ''}
+                                >
+                                  {isUpdating ? (
+                                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                  ) : (
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isBanned ? "M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" : "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"} />
+                                    </svg>
+                                  )}
+                                  {isBanned ? 'Unban' : 'Ban User'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
