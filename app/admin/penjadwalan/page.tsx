@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable'
 
 export default function AdminPenjadwalanPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedSchedules, setSelectedSchedules] = useState<number[]>([])
+  const [selectedSchedule, setSelectedSchedule] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null)
@@ -61,19 +61,11 @@ export default function AdminPenjadwalanPage() {
     }
   ]
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedSchedules(filteredSchedules.map(s => s.id))
-    } else {
-      setSelectedSchedules([])
-    }
-  }
-
   const handleSelectSchedule = (id: number) => {
-    if (selectedSchedules.includes(id)) {
-      setSelectedSchedules(selectedSchedules.filter(scheduleId => scheduleId !== id))
+    if (selectedSchedule === id) {
+      setSelectedSchedule(null)
     } else {
-      setSelectedSchedules([...selectedSchedules, id])
+      setSelectedSchedule(id)
     }
   }
 
@@ -156,28 +148,30 @@ export default function AdminPenjadwalanPage() {
   }
 
   const handleDeleteClick = () => {
-    if (selectedSchedules.length > 0) {
+    if (selectedSchedule) {
       setIsDeleteModalOpen(true)
     }
   }
 
   const handleConfirmDelete = () => {
-    console.log('Deleting schedules:', selectedSchedules)
+    if (!selectedSchedule) return
+    
+    console.log('Deleting schedule:', selectedSchedule)
     // TODO: Implement API call for delete
-    alert(`${selectedSchedules.length} jadwal berhasil dihapus!`)
-    setSelectedSchedules([])
+    alert('Jadwal berhasil dihapus!')
+    setSelectedSchedule(null)
     setIsDeleteModalOpen(false)
   }
 
   const handleExportPDF = () => {
-    if (selectedSchedules.length === 0) {
-      alert('Pilih minimal satu jadwal untuk diexport!')
+    if (!selectedSchedule) {
+      alert('Pilih jadwal untuk diexport!')
       return
     }
 
-    // Get selected schedules data
+    // Get selected schedule data
     const selectedData = schedules.filter(schedule => 
-      selectedSchedules.includes(schedule.id)
+      schedule.id === selectedSchedule
     )
 
     // Create new PDF document
@@ -283,7 +277,7 @@ export default function AdminPenjadwalanPage() {
             <div className="flex gap-3">
               <button 
                 onClick={handleDeleteClick}
-                disabled={selectedSchedules.length === 0}
+                disabled={!selectedSchedule}
                 className="flex items-center gap-2 px-5 py-3 bg-[#e7000b] text-white rounded-[16.4px] hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -293,7 +287,7 @@ export default function AdminPenjadwalanPage() {
 
               <button 
                 onClick={handleExportPDF}
-                disabled={selectedSchedules.length === 0}
+                disabled={!selectedSchedule}
                 className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -388,12 +382,7 @@ export default function AdminPenjadwalanPage() {
                 <thead className="bg-gradient-to-r from-[#f9fafb] to-[#f3f4f6] border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-5 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedSchedules.length === filteredSchedules.length && filteredSchedules.length > 0}
-                        onChange={handleSelectAll}
-                        className="w-5 h-5 rounded border-gray-300 text-[#009966] focus:ring-[#009966]"
-                      />
+                      <span className="text-xs font-bold text-[#4a5565] uppercase tracking-wider">Pilih</span>
                     </th>
                     <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Instalasi</th>
                     <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Paket Tour</th>
@@ -408,10 +397,10 @@ export default function AdminPenjadwalanPage() {
                     <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-6">
                         <input
-                          type="checkbox"
-                          checked={selectedSchedules.includes(schedule.id)}
+                          type="radio"
+                          checked={selectedSchedule === schedule.id}
                           onChange={() => handleSelectSchedule(schedule.id)}
-                          className="w-5 h-5 rounded border-gray-300 text-[#009966] focus:ring-[#009966]"
+                          className="w-5 h-5 border-gray-300 text-[#009966] focus:ring-[#009966]"
                         />
                       </td>
                       <td className="px-6 py-6 text-[#101828]">{schedule.instalasi}</td>
@@ -605,7 +594,7 @@ export default function AdminPenjadwalanPage() {
             <div className="text-center mb-8">
               <h3 className="text-xl font-bold text-[#101828] mb-2">Konfirmasi Penghapusan</h3>
               <p className="text-[#6a7282] text-base">
-                Apakah Anda yakin ingin menghapus {selectedSchedules.length} jadwal yang dipilih? Tindakan ini tidak dapat dibatalkan.
+                Apakah Anda yakin ingin menghapus jadwal yang dipilih? Tindakan ini tidak dapat dibatalkan.
               </p>
             </div>
 

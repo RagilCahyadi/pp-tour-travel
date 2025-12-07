@@ -7,12 +7,12 @@ import { formatRupiah, formatDate, getStatusColor, getStatusLabel } from '@/lib/
 
 export default function AdminPemesananPage() {
   const [selectedTab, setSelectedTab] = useState('all')
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [selectedOrder, setSelectedOrder] = useState<string | null>(null)
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null)
   const [submissionStatus, setSubmissionStatus] = useState('')
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [selectedOrderData, setSelectedOrderData] = useState<any>(null)
   const [orderStatus, setOrderStatus] = useState('')
   const [bookingToken, setBookingToken] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -50,7 +50,7 @@ export default function AdminPemesananPage() {
   const handleManageOrder = (order: any) => {
     if (!order) return
     console.log('Opening modal with order:', order) // Debug
-    setSelectedOrder(order)
+    setSelectedOrderData(order)
     setOrderStatus(order.status || '')
     setBookingToken(order.kode_booking || '')
     setIsOrderModalOpen(true)
@@ -62,10 +62,12 @@ export default function AdminPemesananPage() {
       return
     }
     
-    console.log('Updating booking:', { id: selectedOrder.id, status: orderStatus }) // Debug
+    if (!selectedOrderData) return
+    
+    console.log('Updating booking:', { id: selectedOrderData.id, status: orderStatus }) // Debug
     
     try {
-      await updateBookingStatus(selectedOrder.id, orderStatus as any)
+      await updateBookingStatus(selectedOrderData.id, orderStatus as any)
       alert(`✅ Status pemesanan berhasil diperbarui menjadi "${getStatusLabel(orderStatus)}"!`)
       setIsOrderModalOpen(false)
       refetch()
@@ -76,16 +78,18 @@ export default function AdminPemesananPage() {
   }
 
   const handleDeleteClick = () => {
-    if (selectedOrders.length > 0) {
+    if (selectedOrder) {
       setIsDeleteModalOpen(true)
     }
   }
 
   const handleConfirmDelete = async () => {
+    if (!selectedOrder) return
+    
     try {
-      await Promise.all(selectedOrders.map(id => deleteBooking(id)))
-      alert(`${selectedOrders.length} pemesanan berhasil dihapus!`)
-      setSelectedOrders([])
+      await deleteBooking(selectedOrder)
+      alert('Pemesanan berhasil dihapus!')
+      setSelectedOrder(null)
       setIsDeleteModalOpen(false)
       refetch()
     } catch (err) {
@@ -103,19 +107,11 @@ export default function AdminPemesananPage() {
     return matchesTab && matchesSearch
   })
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedOrders(filteredBookings.map(booking => booking.id))
+  const handleSelectSingleOrder = (id: string) => {
+    if (selectedOrder === id) {
+      setSelectedOrder(null)
     } else {
-      setSelectedOrders([])
-    }
-  }
-
-  const handleSelectOrder = (id: string) => {
-    if (selectedOrders.includes(id)) {
-      setSelectedOrders(selectedOrders.filter(orderId => orderId !== id))
-    } else {
-      setSelectedOrders([...selectedOrders, id])
+      setSelectedOrder(id)
     }
   }
 
@@ -263,7 +259,7 @@ export default function AdminPemesananPage() {
               <button 
                 onClick={handleDeleteClick}
                 className="bg-[#e7000b] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={selectedOrders.length === 0}
+                disabled={!selectedOrder}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -272,13 +268,13 @@ export default function AdminPemesananPage() {
               </button>
               <button 
                 onClick={() => {
-                  if (selectedOrders.length > 0) {
-                    const booking = bookings.find(b => b.id === selectedOrders[0])
+                  if (selectedOrder) {
+                    const booking = bookings.find(b => b.id === selectedOrder)
                     if (booking) handleManageOrder(booking)
                   }
                 }}
                 className="bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:from-[#008055] hover:to-[#00a66b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={selectedOrders.length === 0}
+                disabled={!selectedOrder}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -467,12 +463,7 @@ export default function AdminPemesananPage() {
                 <thead>
                   <tr className="bg-gradient-to-r from-[#f9fafb] to-[#f3f4f6] border-b border-gray-200">
                     <th className="px-6 py-4 text-left w-16">
-                      <input
-                        type="checkbox"
-                        onChange={handleSelectAll}
-                        checked={selectedOrders.length === filteredBookings.length && filteredBookings.length > 0}
-                        className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
-                      />
+                      <span className="text-xs font-bold text-[#4a5565] uppercase tracking-wider">Pilih</span>
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
                       Pelanggan
@@ -534,10 +525,10 @@ export default function AdminPemesananPage() {
                       <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-6">
                           <input
-                            type="checkbox"
-                            checked={selectedOrders.includes(booking.id)}
-                            onChange={() => handleSelectOrder(booking.id)}
-                            className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
+                            type="radio"
+                            checked={selectedOrder === booking.id}
+                            onChange={() => handleSelectSingleOrder(booking.id)}
+                            className="w-5 h-5 border-gray-300 text-[#009966] focus:ring-[#009966]"
                           />
                         </td>
                         <td className="px-6 py-6">
@@ -696,7 +687,7 @@ export default function AdminPemesananPage() {
       )}
 
       {/* Order Management Modal */}
-      {isOrderModalOpen && selectedOrder && (
+      {isOrderModalOpen && selectedOrderData && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
@@ -722,7 +713,7 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Nama Pelanggan</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.customers?.nama_pelanggan || selectedOrder.customerName || '-'}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrderData.customers?.nama_pelanggan || selectedOrderData.customerName || '-'}</p>
                     </div>
                   </div>
 
@@ -730,7 +721,7 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Instalasi</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.customers?.nama_perusahaan || selectedOrder.company || '-'}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrderData.customers?.nama_perusahaan || selectedOrderData.company || '-'}</p>
                     </div>
                   </div>
 
@@ -739,9 +730,9 @@ export default function AdminPemesananPage() {
                     <label className="block text-sm text-[#364153] mb-2">Informasi Kontak</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
                       <div className="text-sm text-[#101828]">
-                        <p>{selectedOrder.customers?.nomor_telepon || selectedOrder.contact || '-'}</p>
-                        {selectedOrder.customers?.email && (
-                          <p className="text-gray-600 mt-1">{selectedOrder.customers.email}</p>
+                        <p>{selectedOrderData.customers?.nomor_telepon || selectedOrderData.contact || '-'}</p>
+                        {selectedOrderData.customers?.email && (
+                          <p className="text-gray-600 mt-1">{selectedOrderData.customers.email}</p>
                         )}
                       </div>
                     </div>
@@ -754,9 +745,9 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Pilih Paket</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.tour_packages?.nama_paket || selectedOrder.package || '-'}</p>
-                      {selectedOrder.jumlah_pax && (
-                        <p className="text-xs text-gray-600 mt-1">{selectedOrder.jumlah_pax} pax • {formatRupiah(selectedOrder.total_biaya || 0)}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrderData.tour_packages?.nama_paket || selectedOrderData.package || '-'}</p>
+                      {selectedOrderData.jumlah_pax && (
+                        <p className="text-xs text-gray-600 mt-1">{selectedOrderData.jumlah_pax} pax • {formatRupiah(selectedOrderData.total_biaya || 0)}</p>
                       )}
                     </div>
                   </div>
@@ -802,7 +793,7 @@ export default function AdminPemesananPage() {
                 <div>
                   <label className="block text-sm text-[#364153] mb-2">Catatan Pelanggan</label>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 min-h-[62px]">
-                    <p className="text-sm text-[#101828] whitespace-pre-wrap">{selectedOrder.catatan || selectedOrder.notes || '-'}</p>
+                    <p className="text-sm text-[#101828] whitespace-pre-wrap">{selectedOrderData.catatan || selectedOrderData.notes || '-'}</p>
                   </div>
                 </div>
 
@@ -810,16 +801,16 @@ export default function AdminPemesananPage() {
                 <div>
                   <label className="block text-sm text-[#364153] mb-2">Kode Booking</label>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                    <code className="text-sm font-mono text-[#101828]">{selectedOrder.kode_booking || '-'}</code>
+                    <code className="text-sm font-mono text-[#101828]">{selectedOrderData.kode_booking || '-'}</code>
                   </div>
                 </div>
 
                 {/* Tanggal Keberangkatan */}
-                {selectedOrder.tanggal_keberangkatan && (
+                {selectedOrderData.tanggal_keberangkatan && (
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Tanggal Keberangkatan</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{formatDate(selectedOrder.tanggal_keberangkatan)}</p>
+                      <p className="text-sm text-[#101828]">{formatDate(selectedOrderData.tanggal_keberangkatan)}</p>
                     </div>
                   </div>
                 )}

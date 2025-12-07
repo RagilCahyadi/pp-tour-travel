@@ -2,134 +2,77 @@
 
 import AdminSidebar from '@/components/AdminSidebar'
 import { useState } from 'react'
+import { usePayments } from '@/lib/hooks/usePayments'
+import { formatRupiah } from '@/lib/utils/helpers'
 
 export default function AdminPembayaranPage() {
   const [selectedTab, setSelectedTab] = useState('all')
-  const [selectedPayments, setSelectedPayments] = useState<number[]>([])
+  const { payments, loading, error, verifyPayment, refetch } = usePayments(selectedTab === 'all' ? undefined : selectedTab)
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false)
   const [verificationNote, setVerificationNote] = useState('')
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      const filtered = payments.filter(payment => {
-        const matchesTab = selectedTab === 'all' || payment.status === selectedTab
-        const matchesSearch = searchQuery === '' || 
-                             payment.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             payment.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             payment.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-        return matchesTab && matchesSearch
-      })
-      setSelectedPayments(filtered.map(p => p.id))
+  const handleSelectPayment = (id: string) => {
+    if (selectedPayment === id) {
+      setSelectedPayment(null)
     } else {
-      setSelectedPayments([])
-    }
-  }
-
-  const handleSelectPayment = (id: number) => {
-    if (selectedPayments.includes(id)) {
-      setSelectedPayments(selectedPayments.filter(paymentId => paymentId !== id))
-    } else {
-      setSelectedPayments([...selectedPayments, id])
+      setSelectedPayment(id)
     }
   }
 
   const handleVerifyClick = () => {
-    if (selectedPayments.length > 0) {
+    if (selectedPayment) {
       setIsVerifyModalOpen(true)
     }
   }
 
-  const handleConfirmVerify = () => {
+  const handleConfirmVerify = async () => {
     if (!verificationNote.trim()) {
       alert('Mohon berikan catatan verifikasi!')
       return
     }
-    console.log('Verifying payments:', selectedPayments)
-    console.log('Verification note:', verificationNote)
-    // TODO: Implement verification logic
-    alert(`${selectedPayments.length} pembayaran berhasil diverifikasi!`)
-    setSelectedPayments([])
-    setIsVerifyModalOpen(false)
-    setVerificationNote('')
+    
+    if (!selectedPayment) return
+    
+    try {
+      await verifyPayment(selectedPayment, 'admin-user-id', verificationNote)
+      
+      alert(`✅ Pembayaran berhasil diverifikasi!`)
+      setSelectedPayment(null)
+      setIsVerifyModalOpen(false)
+      setVerificationNote('')
+      await refetch()
+    } catch (err: any) {
+      console.error('Error verifying payment:', err)
+      alert(`❌ Gagal memverifikasi pembayaran: ${err.message}`)
+    }
   }
 
   const handleDeleteClick = () => {
-    if (selectedPayments.length > 0) {
+    if (selectedPayment) {
       setIsDeleteModalOpen(true)
     }
   }
 
   const handleConfirmDelete = () => {
-    console.log('Deleting payments:', selectedPayments)
-    // TODO: Implement delete logic
-    alert(`${selectedPayments.length} data pembayaran berhasil dihapus!`)
-    setSelectedPayments([])
+    // TODO: Implement delete logic with Supabase
+    alert('⚠️ Fitur hapus pembayaran akan segera ditambahkan')
     setIsDeleteModalOpen(false)
   }
 
-  // Mock data for payments
-  const payments = [
-    {
-      id: 1,
-      bookingCode: 'BAMH760',
-      customerName: 'Bambang',
-      company: 'PT. Amerta Jaya',
-      package: 'Bali Premium',
-      pax: 48,
-      totalCost: 'Rp 69.600.000',
-      status: 'verified'
-    },
-    {
-      id: 2,
-      bookingCode: 'BHRS937',
-      customerName: 'Sigit',
-      company: 'PT. Amerta Jaya',
-      package: 'Bali Ekonomis',
-      pax: 56,
-      totalCost: 'Rp 61.600.000',
-      status: 'verified'
-    },
-    {
-      id: 3,
-      bookingCode: 'DEWK123',
-      customerName: 'Dewi Kusuma',
-      company: 'CV. Maju Bersama',
-      package: 'Yogyakarta Premium',
-      pax: 32,
-      totalCost: 'Rp 24.000.000',
-      status: 'verified'
-    },
-    {
-      id: 4,
-      bookingCode: 'ANDW456',
-      customerName: 'Andi Wijaya',
-      company: 'PT. Sukses Makmur',
-      package: 'Bandung Ekonomis',
-      pax: 40,
-      totalCost: 'Rp 39.600.000',
-      status: 'pending'
-    },
-    {
-      id: 5,
-      bookingCode: 'SITN321',
-      customerName: 'Siti Nurhaliza',
-      company: 'CV. Berkah Jaya',
-      package: 'Lombok Premium',
-      pax: 28,
-      totalCost: 'Rp 33.600.000',
-      status: 'pending'
-    }
-  ]
-
   const filteredPayments = payments.filter(payment => {
-    const matchesTab = selectedTab === 'all' || payment.status === selectedTab
-    const matchesSearch = searchQuery === '' || 
-                         payment.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         payment.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         payment.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesTab && matchesSearch
+    if (searchQuery === '') return true
+    
+    const searchLower = searchQuery.toLowerCase()
+    const customerName = payment.bookings.customers.nama_pelanggan?.toLowerCase() || ''
+    const company = payment.bookings.customers.nama_perusahaan?.toLowerCase() || ''
+    const bookingCode = payment.bookings.kode_booking?.toLowerCase() || ''
+    
+    return customerName.includes(searchLower) || 
+           company.includes(searchLower) || 
+           bookingCode.includes(searchLower)
   })
 
   const stats = {
@@ -179,7 +122,7 @@ export default function AdminPembayaranPage() {
               <button 
                 onClick={handleDeleteClick}
                 className="bg-[#e7000b] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={selectedPayments.length === 0}
+                disabled={!selectedPayment}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -189,7 +132,7 @@ export default function AdminPembayaranPage() {
               <button
                 onClick={handleVerifyClick}
                 className="bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:from-[#008055] hover:to-[#00a66b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={selectedPayments.length === 0}
+                disabled={!selectedPayment}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -339,12 +282,7 @@ export default function AdminPembayaranPage() {
                 <thead>
                   <tr className="bg-gradient-to-r from-[#f9fafb] to-[#f3f4f6] border-b border-gray-200">
                     <th className="px-6 py-4 text-left w-16">
-                      <input
-                        type="checkbox"
-                        onChange={handleSelectAll}
-                        checked={selectedPayments.length === filteredPayments.length && filteredPayments.length > 0}
-                        className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
-                      />
+                      <span className="text-xs font-bold text-[#4a5565] uppercase tracking-wider">Pilih</span>
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
                       Kode Booking
@@ -370,35 +308,64 @@ export default function AdminPembayaranPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredPayments.length > 0 ? filteredPayments.map((payment) => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-12 h-12 border-4 border-[#009966] border-t-transparent rounded-full animate-spin"></div>
+                          <p className="text-gray-600">Memuat data pembayaran...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <p className="text-red-700 font-medium">Gagal memuat data</p>
+                            <p className="text-red-600 text-sm">{error}</p>
+                          </div>
+                          <button
+                            onClick={() => refetch()}
+                            className="mt-2 px-4 py-2 bg-[#009966] text-white rounded-lg hover:bg-[#008055] transition-colors"
+                          >
+                            Coba Lagi
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredPayments.length > 0 ? filteredPayments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-6">
                         <input
-                          type="checkbox"
-                          checked={selectedPayments.includes(payment.id)}
+                          type="radio"
+                          checked={selectedPayment === payment.id}
                           onChange={() => handleSelectPayment(payment.id)}
-                          className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
+                          className="w-5 h-5 border-gray-300 text-[#009966] focus:ring-[#009966]"
                         />
                       </td>
                       <td className="px-6 py-6">
                         <code className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-mono text-[#101828]">
-                          {payment.bookingCode}
+                          {payment.bookings.kode_booking}
                         </code>
                       </td>
                       <td className="px-6 py-6">
-                        <p className="text-[#101828] text-base">{payment.customerName}</p>
+                        <p className="text-[#101828] text-base">{payment.bookings.customers.nama_pelanggan}</p>
                       </td>
                       <td className="px-6 py-6">
-                        <p className="text-[#101828] text-base">{payment.company}</p>
+                        <p className="text-[#101828] text-base">{payment.bookings.customers.nama_perusahaan || '-'}</p>
                       </td>
                       <td className="px-6 py-6">
-                        <p className="text-[#101828] text-base">{payment.package}</p>
+                        <p className="text-[#101828] text-base">{payment.bookings.tour_packages.nama_paket}</p>
                       </td>
                       <td className="px-6 py-6">
-                        <p className="text-[#101828] text-base">{payment.pax}</p>
+                        <p className="text-[#101828] text-base">{payment.bookings.jumlah_pax}</p>
                       </td>
                       <td className="px-6 py-6">
-                        <p className="text-[#101828] text-base">{payment.totalCost}</p>
+                        <p className="text-[#101828] text-base">{formatRupiah(payment.jumlah_pembayaran)}</p>
                       </td>
                       <td className="px-6 py-6">
                         {getStatusBadge(payment.status)}
@@ -479,11 +446,15 @@ export default function AdminPembayaranPage() {
       )}
 
       {/* Payment Verification Modal */}
-      {isVerifyModalOpen && selectedPayments.length > 0 && (
+      {isVerifyModalOpen && selectedPayment && (() => {
+        const selectedPaymentData = payments.find(p => p.id === selectedPayment)
+        if (!selectedPaymentData) return null
+        
+        return (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
               <h3 className="text-xl font-semibold text-[#101828]">Konfirmasi Pembayaran</h3>
               <button 
                 onClick={() => setIsVerifyModalOpen(false)}
@@ -506,7 +477,7 @@ export default function AdminPembayaranPage() {
                     <label className="block text-sm text-[#6a7282] mb-1">Kode Booking</label>
                     <div className="inline-block bg-gray-100 px-3 py-1.5 rounded-lg">
                       <span className="font-mono text-sm text-[#101828]">
-                        {payments.find(p => p.id === selectedPayments[0])?.bookingCode}
+                        {selectedPaymentData.bookings.kode_booking}
                       </span>
                     </div>
                   </div>
@@ -515,7 +486,7 @@ export default function AdminPembayaranPage() {
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Nama Pelanggan</label>
                     <p className="text-base text-[#101828]">
-                      {payments.find(p => p.id === selectedPayments[0])?.customerName}
+                      {selectedPaymentData.bookings.customers.nama_pelanggan}
                     </p>
                   </div>
 
@@ -523,7 +494,7 @@ export default function AdminPembayaranPage() {
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Instansi</label>
                     <p className="text-base text-[#101828]">
-                      {payments.find(p => p.id === selectedPayments[0])?.company}
+                      {selectedPaymentData.bookings.customers.nama_perusahaan || '-'}
                     </p>
                   </div>
 
@@ -531,7 +502,7 @@ export default function AdminPembayaranPage() {
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Paket Tour</label>
                     <p className="text-base text-[#101828]">
-                      {payments.find(p => p.id === selectedPayments[0])?.package}
+                      {selectedPaymentData.bookings.tour_packages.nama_paket}
                     </p>
                   </div>
                 </div>
@@ -542,7 +513,7 @@ export default function AdminPembayaranPage() {
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Jumlah Pax</label>
                     <p className="text-base text-[#101828]">
-                      {payments.find(p => p.id === selectedPayments[0])?.pax} orang
+                      {selectedPaymentData.bookings.jumlah_pax} orang
                     </p>
                   </div>
 
@@ -550,33 +521,65 @@ export default function AdminPembayaranPage() {
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Total Biaya</label>
                     <p className="text-base text-[#101828]">
-                      {payments.find(p => p.id === selectedPayments[0])?.totalCost}
+                      {formatRupiah(selectedPaymentData.jumlah_pembayaran)}
                     </p>
                   </div>
 
                   {/* Current Status */}
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Status Saat Ini</label>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-[#fee685] rounded-full">
-                      <svg className="w-4 h-4 text-[#bb4d00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-sm text-[#bb4d00]">Menunggu Verifikasi</span>
-                    </div>
+                    {getStatusBadge(selectedPaymentData.status)}
                   </div>
 
                   {/* WhatsApp Contact */}
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Kontak WhatsApp</label>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-[#b9f8cf] rounded-lg">
+                    <a 
+                      href={`https://wa.me/${selectedPaymentData.bookings.customers.nomor_telepon?.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-[#b9f8cf] rounded-lg hover:bg-green-100 transition-colors"
+                    >
                       <svg className="w-4 h-4 text-[#008236]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                       </svg>
-                      <span className="text-sm text-[#008236]">081234567893</span>
-                    </div>
+                      <span className="text-sm text-[#008236]">{selectedPaymentData.bookings.customers.nomor_telepon || '-'}</span>
+                    </a>
                   </div>
                 </div>
               </div>
+
+              {/* Bukti Transfer Preview */}
+              {selectedPaymentData.bukti_pembayaran_url && (
+                <div className="border-t border-gray-200 pt-6">
+                  <label className="block text-sm text-[#364153] mb-3">Bukti Transfer</label>
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <img 
+                      src={selectedPaymentData.bukti_pembayaran_url} 
+                      alt="Bukti Transfer" 
+                      className="w-full h-auto rounded-lg shadow-md max-h-96 object-contain mx-auto"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                      }}
+                    />
+                    <div className="hidden text-center py-8">
+                      <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-gray-500">Gagal memuat gambar</p>
+                      <a 
+                        href={selectedPaymentData.bukti_pembayaran_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[#009966] hover:underline text-sm mt-2 inline-block"
+                      >
+                        Lihat gambar asli
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Info Box */}
               <div className="border-t border-gray-200 pt-6">
@@ -634,7 +637,8 @@ export default function AdminPembayaranPage() {
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
