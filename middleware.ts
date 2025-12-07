@@ -7,8 +7,19 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
 ]);
 
+// Admin routes that require authentication
+const isAdminRoute = createRouteMatcher([
+  '/admin(.*)',
+]);
+
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+  // Protect admin routes - requires authentication
+  if (isAdminRoute(request)) {
+    await auth.protect();
+  }
+  
+  // Protect other non-public routes
+  if (!isPublicRoute(request) && !isAdminRoute(request)) {
     await auth.protect();
   }
 });
