@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function AdminPembayaranPage() {
   const [selectedTab, setSelectedTab] = useState('all')
-  const { payments, loading, error, verifyPayment, refetch } = usePayments(selectedTab === 'all' ? undefined : selectedTab)
+  const { payments, loading, error, verifyPayment, rejectPayment, refetch } = usePayments(selectedTab === 'all' ? undefined : selectedTab)
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -67,6 +67,43 @@ export default function AdminPembayaranPage() {
     }
   }
 
+  const handleRejectPayment = async () => {
+    if (!verificationNote.trim()) {
+      alert('Mohon berikan alasan penolakan!')
+      return
+    }
+    
+    if (!selectedPayment) {
+      alert('Tidak ada pembayaran yang dipilih!')
+      return
+    }
+    
+    if (!confirm('Apakah Anda yakin ingin menolak pembayaran ini?')) {
+      return
+    }
+    
+    try {
+      const result = await rejectPayment(selectedPayment, null, verificationNote)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      // Close modal
+      setIsVerifyModalOpen(false)
+      setVerificationNote('')
+      setSelectedPayment(null)
+      
+      // Switch to "Semua" tab to show the rejected payment
+      setSelectedTab('all')
+      
+      alert(`✅ Pembayaran berhasil ditolak!\n\n💡 Anda dipindahkan ke tab "Semua" untuk melihat pembayaran yang ditolak.`)
+    } catch (err: any) {
+      console.error('Error rejecting payment:', err)
+      alert(`❌ Gagal menolak pembayaran:\n${err.message || err}`)
+    }
+  }
+
   const handleDeleteClick = () => {
     if (selectedPayment) {
       setIsDeleteModalOpen(true)
@@ -95,7 +132,8 @@ export default function AdminPembayaranPage() {
   const stats = {
     total: payments.length,
     verified: payments.filter(p => p.status === 'verified').length,
-    pending: payments.filter(p => p.status === 'pending').length
+    pending: payments.filter(p => p.status === 'pending').length,
+    rejected: payments.filter(p => p.status === 'rejected').length
   }
 
   const getStatusBadge = (status: string) => {
@@ -106,6 +144,15 @@ export default function AdminPembayaranPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <span className="text-sm text-[#007a55]">Sudah Dibayar</span>
+        </div>
+      )
+    } else if (status === 'rejected') {
+      return (
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full">
+          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span className="text-sm text-red-600">Ditolak</span>
         </div>
       )
     } else {
@@ -219,11 +266,30 @@ export default function AdminPembayaranPage() {
                   {stats.pending}
                 </span>
               </button>
+
+              <button
+                onClick={() => setSelectedTab('rejected')}
+                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
+                  selectedTab === 'rejected'
+                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                    : 'text-[#4a5565] hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span className={selectedTab === 'rejected' ? 'font-semibold' : ''}>Ditolak</span>
+                <span className={`px-2.5 py-1 rounded-full text-sm ${
+                  selectedTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                }`}>
+                  {stats.rejected}
+                </span>
+              </button>
             </div>
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -262,6 +328,20 @@ export default function AdminPembayaranPage() {
                 <div className="w-12 h-12 bg-[#d0fae5] rounded-2xl flex items-center justify-center">
                   <svg className="w-6 h-6 text-[#009966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base text-[#6a7282] mb-1">Ditolak</p>
+                  <p className="text-base text-red-600 font-semibold">{stats.rejected}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
               </div>
@@ -461,10 +541,10 @@ export default function AdminPembayaranPage() {
         
         return (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-[16px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] w-full max-w-[746px] relative max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
-              <h3 className="text-xl font-semibold text-[#101828]">Konfirmasi Pembayaran</h3>
+            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-[#101828]">Verifikasi Pembayaran</h3>
               <button 
                 onClick={() => setIsVerifyModalOpen(false)}
                 className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
@@ -478,13 +558,13 @@ export default function AdminPembayaranPage() {
             {/* Content */}
             <div className="px-6 py-5 space-y-6">
               {/* Two Column Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 {/* Left Column */}
                 <div className="space-y-4">
                   {/* Booking Code */}
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Kode Booking</label>
-                    <div className="inline-block bg-gray-100 px-3 py-1.5 rounded-lg">
+                    <div className="inline-block bg-gray-100 px-3 py-1.5 rounded-[10px]">
                       <span className="font-mono text-sm text-[#101828]">
                         {selectedPaymentData.bookings.kode_booking}
                       </span>
@@ -537,106 +617,79 @@ export default function AdminPembayaranPage() {
                   {/* Current Status */}
                   <div>
                     <label className="block text-sm text-[#6a7282] mb-1">Status Saat Ini</label>
-                    {getStatusBadge(selectedPaymentData.status)}
-                  </div>
-
-                  {/* WhatsApp Contact */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Kontak WhatsApp</label>
-                    <a 
-                      href={`https://wa.me/${selectedPaymentData.bookings.customers.nomor_telepon?.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-[#b9f8cf] rounded-lg hover:bg-green-100 transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-[#008236]" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 border border-[#fee685] rounded-full">
+                      <svg className="w-4 h-4 text-[#bb4d00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-sm text-[#008236]">{selectedPaymentData.bookings.customers.nomor_telepon || '-'}</span>
-                    </a>
+                      <span className="text-sm text-[#bb4d00]">Menunggu Verifikasi</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Bukti Transfer Preview */}
-              {selectedPaymentData.bukti_pembayaran_url && (
-                <div className="border-t border-gray-200 pt-6">
-                  <label className="block text-sm text-[#364153] mb-3">Bukti Transfer</label>
-                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-                    <img 
-                      src={selectedPaymentData.bukti_pembayaran_url} 
-                      alt="Bukti Transfer" 
-                      className="w-full h-auto rounded-lg shadow-md max-h-96 object-contain mx-auto"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                      }}
-                    />
-                    <div className="hidden text-center py-8">
-                      <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              {/* Bukti Pembayaran Section */}
+              <div className="border-t border-gray-200 pt-6 space-y-3">
+                <label className="block text-sm text-[#364153]">Bukti Pembayaran</label>
+                <div className="bg-gray-50 border-2 border-[#d1d5dc] rounded-[16.4px] p-7">
+                  <div className="flex items-center gap-4">
+                    {/* File Icon */}
+                    <div className="w-12 h-12 bg-[#d0fae5] rounded-[10px] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-6 h-6 text-[#009966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <p className="text-gray-500">Gagal memuat gambar</p>
-                      <a 
-                        href={selectedPaymentData.bukti_pembayaran_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-[#009966] hover:underline text-sm mt-2 inline-block"
-                      >
-                        Lihat gambar asli
-                      </a>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Info Box */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="bg-blue-50 border border-[#bedbff] rounded-2xl p-4">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-[#1447e6]" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
+                    
+                    {/* File Info */}
                     <div className="flex-1">
-                      <p className="text-base font-semibold text-[#1c398e] mb-1">
-                        Pastikan bukti transfer sudah diterima via WhatsApp
-                      </p>
-                      <p className="text-base text-[#1447e6]">
-                        Verifikasi pembayaran setelah Anda mengecek bukti transfer yang dikirim pelanggan melalui WhatsApp
-                      </p>
+                      <p className="text-base text-[#101828]">bukti_transfer_{selectedPaymentData.bookings.customers.nama_pelanggan?.toLowerCase().replace(/\s+/g, '_')}.jpg</p>
+                      <p className="text-base text-[#6a7282]">Sudah diupload</p>
                     </div>
+
+                    {/* View Button */}
+                    {selectedPaymentData.bukti_pembayaran_url && (
+                      <a
+                        href={selectedPaymentData.bukti_pembayaran_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-[#009966] text-white text-sm rounded-[10px] hover:opacity-90 transition-opacity"
+                      >
+                        Lihat Bukti
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Verification Note */}
-              <div>
-                <label className="block text-sm text-[#364153] mb-2">Catatan Verifikasi</label>
+              <div className="space-y-2">
+                <label className="block text-sm text-[#364153]">Catatan (Wajib diisi)</label>
                 <textarea
                   value={verificationNote}
                   onChange={(e) => setVerificationNote(e.target.value)}
-                  placeholder="Contoh: Transfer sudah masuk, nominal sesuai"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-[#101828] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#009966] focus:border-transparent resize-none"
+                  placeholder="Contoh: Transfer sudah masuk, nominal sesuai (untuk verifikasi) atau Bukti transfer tidak valid (untuk penolakan)"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-[10px] text-sm text-[#101828] placeholder:text-[rgba(16,24,40,0.5)] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:border-transparent resize-none"
                   rows={3}
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
+            <div className="border-t border-gray-200 px-6 py-[17px] flex items-center justify-end gap-3">
               <button
                 onClick={() => setIsVerifyModalOpen(false)}
-                className="px-6 py-2.5 bg-gray-100 text-[#364153] rounded-2xl hover:bg-gray-200 transition-colors"
+                className="px-6 py-2.5 bg-gray-100 text-[#364153] text-base rounded-[16.4px] hover:bg-gray-200 transition-colors h-11"
               >
                 Batal
               </button>
               <button
+                onClick={handleRejectPayment}
+                className="px-6 py-2.5 bg-[#e7000b] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity h-11"
+              >
+                Tolak
+              </button>
+              <button
                 onClick={handleConfirmVerify}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-2xl hover:opacity-90 transition-opacity flex items-center gap-2"
+                className="px-5 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity flex items-center gap-2 h-11"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
