@@ -1,0 +1,457 @@
+'use client'
+
+import AdminSidebar from '@/components/AdminSidebar'
+import { useState } from 'react'
+
+export default function AdminPenjadwalanPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSchedules, setSelectedSchedules] = useState<number[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null)
+  const [formData, setFormData] = useState({
+    paketTour: '',
+    statusLayanan: '',
+    kodeJadwal: '',
+    keberangkatan: ''
+  })
+
+  const schedules = [
+    {
+      id: 1,
+      instalasi: 'PT. Amerta J',
+      paketTour: 'Paket Bali Premium',
+      kode: 'PRE17B',
+      keberangkatan: '17 Juni 2025',
+      status: 'tidak-aktif'
+    },
+    {
+      id: 2,
+      instalasi: 'PT. Amerta J',
+      paketTour: 'Paket Bali Ekonomis',
+      kode: 'EKS15B',
+      keberangkatan: '15 Agustus 2025',
+      status: 'aktif'
+    },
+    {
+      id: 3,
+      instalasi: 'CV. Maju Bersama',
+      paketTour: 'Paket Yogyakarta Premium',
+      kode: 'YOG23C',
+      keberangkatan: '23 Juli 2025',
+      status: 'aktif'
+    },
+    {
+      id: 4,
+      instalasi: 'PT. Sukses Makmur',
+      paketTour: 'Paket Bandung Ekonomis',
+      kode: 'BDG10D',
+      keberangkatan: '10 September 2025',
+      status: 'tidak-aktif'
+    },
+    {
+      id: 5,
+      instalasi: 'CV. Berkah Jaya',
+      paketTour: 'Paket Lombok Premium',
+      kode: 'LMB05E',
+      keberangkatan: '5 Oktober 2025',
+      status: 'aktif'
+    }
+  ]
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedSchedules(filteredSchedules.map(s => s.id))
+    } else {
+      setSelectedSchedules([])
+    }
+  }
+
+  const handleSelectSchedule = (id: number) => {
+    if (selectedSchedules.includes(id)) {
+      setSelectedSchedules(selectedSchedules.filter(scheduleId => scheduleId !== id))
+    } else {
+      setSelectedSchedules([...selectedSchedules, id])
+    }
+  }
+
+  const filteredSchedules = schedules.filter(schedule => {
+    const matchesSearch = searchQuery === '' || 
+                         schedule.instalasi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         schedule.paketTour.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         schedule.kode.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesSearch
+  })
+
+  const totalJadwal = schedules.length
+  const jadwalAktif = schedules.filter(s => s.status === 'aktif').length
+  const jadwalTidakAktif = schedules.filter(s => s.status === 'tidak-aktif').length
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+    setSelectedScheduleId(null)
+    setFormData({
+      paketTour: '',
+      statusLayanan: '',
+      kodeJadwal: '',
+      keberangkatan: ''
+    })
+  }
+
+  const handleEditSchedule = (scheduleId: number) => {
+    setIsModalOpen(true)
+    
+    if (scheduleId) {
+      const schedule = schedules.find(s => s.id === scheduleId)
+      if (schedule) {
+        setSelectedScheduleId(scheduleId)
+        // Convert date format from "DD Bulan YYYY" to "YYYY-MM-DD"
+        const dateMap: { [key: string]: string } = {
+          'Juni': '06',
+          'Agustus': '08',
+          'Juli': '07',
+          'September': '09',
+          'Oktober': '10'
+        }
+        const dateParts = schedule.keberangkatan.split(' ')
+        const day = dateParts[0].padStart(2, '0')
+        const month = dateMap[dateParts[1]] || '01'
+        const year = dateParts[2]
+        const formattedDate = `${year}-${month}-${day}`
+        
+        setFormData({
+          paketTour: schedule.paketTour,
+          statusLayanan: schedule.status,
+          kodeJadwal: schedule.kode,
+          keberangkatan: formattedDate
+        })
+      }
+    }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = () => {
+    console.log('Form submitted:', formData)
+    // TODO: Implement actual save logic
+    handleCloseModal()
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <AdminSidebar activePage="penjadwalan" />
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Kelola Penjadwalan</h1>
+              <p className="text-[#6a7282] text-base">Kelola jadwal keberangkatan paket tour</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span className="text-[#364153]">Export</span>
+              </button>
+              
+              <button 
+                onClick={handleOpenModal}
+                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Kelola Jadwal</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white border border-gray-100 rounded-[16.4px] p-5 shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[#6a7282] text-base mb-1">Total Jadwal</p>
+                  <p className="text-[#101828] text-base font-semibold">{totalJadwal}</p>
+                </div>
+                <div className="bg-blue-100 rounded-[16.4px] p-3">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-[16.4px] p-5 shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[#6a7282] text-base mb-1">Jadwal Aktif</p>
+                  <p className="text-[#009966] text-base font-semibold">{jadwalAktif}</p>
+                </div>
+                <div className="bg-[#d0fae5] rounded-[16.4px] p-3">
+                  <svg className="w-6 h-6 text-[#009966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-[16.4px] p-5 shadow-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[#6a7282] text-base mb-1">Tidak Aktif</p>
+                  <p className="text-[#e7000b] text-base font-semibold">{jadwalTidakAktif}</p>
+                </div>
+                <div className="bg-[#ffe2e2] rounded-[16.4px] p-3">
+                  <svg className="w-6 h-6 text-[#e7000b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="bg-white border border-gray-100 rounded-[16px] p-6 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <svg className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Cari berdasarkan instalasi, paket, atau kode..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-[16.4px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                />
+              </div>
+              <button className="flex items-center gap-2 px-6 py-3 border border-gray-200 rounded-[16.4px] hover:bg-gray-50 transition-colors">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="text-[#364153]">Filter Lanjutan</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white border border-gray-100 rounded-[16px] shadow-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-[#f9fafb] to-[#f3f4f6] border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-5 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedSchedules.length === filteredSchedules.length && filteredSchedules.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-5 h-5 rounded border-gray-300 text-[#009966] focus:ring-[#009966]"
+                      />
+                    </th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Instalasi</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Paket Tour</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Kode</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Keberangkatan</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Status Layanan</th>
+                    <th className="px-6 py-5 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredSchedules.map((schedule) => (
+                    <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedSchedules.includes(schedule.id)}
+                          onChange={() => handleSelectSchedule(schedule.id)}
+                          className="w-5 h-5 rounded border-gray-300 text-[#009966] focus:ring-[#009966]"
+                        />
+                      </td>
+                      <td className="px-6 py-6 text-[#101828]">{schedule.instalasi}</td>
+                      <td className="px-6 py-6 text-[#101828]">{schedule.paketTour}</td>
+                      <td className="px-6 py-6">
+                        <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-[#101828] text-sm font-mono rounded-[10px]">
+                          {schedule.kode}
+                        </span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-[#101828]">{schedule.keberangkatan}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6">
+                        {schedule.status === 'aktif' ? (
+                          <div className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-[#a4f4cf] rounded-full">
+                            <svg className="w-4 h-4 text-[#007a55]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm text-[#007a55]">Aktif</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 px-3 py-2 bg-red-50 border border-[#ffc9c9] rounded-full">
+                            <svg className="w-4 h-4 text-[#c10007]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm text-[#c10007]">Tidak Aktif</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-6">
+                        <button
+                          onClick={() => handleEditSchedule(schedule.id)}
+                          className="text-[#009966] hover:text-[#007a55] font-medium transition-colors">
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="text-[#4a5565]">
+                <span>Menampilkan </span>
+                <span className="font-semibold">1-{filteredSchedules.length}</span>
+                <span> dari </span>
+                <span className="font-semibold">{filteredSchedules.length}</span>
+                <span> jadwal</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
+                  Previous
+                </button>
+                <button className="px-3 py-2 bg-[#009966] text-white rounded-[10px] font-medium">
+                  1
+                </button>
+                <button className="px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
+                  2
+                </button>
+                <button className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50" onClick={handleCloseModal}>
+          <div className="bg-white rounded-[16.4px] shadow-2xl w-[576px] max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-[#101828]">
+                {selectedScheduleId ? 'Edit Penjadwalan' : 'Tambah Penjadwalan'}
+              </h3>
+              <button 
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  {/* Paket Tour */}
+                  <div>
+                    <label className="block text-sm text-[#364153] mb-2">Paket Tour</label>
+                    <input
+                      type="text"
+                      name="paketTour"
+                      value={formData.paketTour}
+                      onChange={handleInputChange}
+                      placeholder="Paket Bali Premium"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                    />
+                  </div>
+
+                  {/* Kode Jadwal */}
+                  <div>
+                    <label className="block text-sm text-[#364153] mb-2">Kode Jadwal</label>
+                    <input
+                      type="text"
+                      name="kodeJadwal"
+                      value={formData.kodeJadwal}
+                      onChange={handleInputChange}
+                      placeholder="PRE17B"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  {/* Status Layanan */}
+                  <div>
+                    <label className="block text-sm text-[#364153] mb-2">Status Layanan</label>
+                    <div className="relative">
+                      <select
+                        name="statusLayanan"
+                        value={formData.statusLayanan}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] appearance-none focus:outline-none focus:ring-2 focus:ring-[#009966]">
+                        <option value="">Pilih Status</option>
+                        <option value="aktif">Aktif</option>
+                        <option value="tidak-aktif">Tidak Aktif</option>
+                      </select>
+                      <svg className="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Keberangkatan */}
+                  <div>
+                    <label className="block text-sm text-[#364153] mb-2">Keberangkatan</label>
+                    <input
+                      type="date"
+                      name="keberangkatan"
+                      value={formData.keberangkatan}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] text-[#101828] focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
+              <button 
+                onClick={handleSubmit}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[10px] hover:opacity-90 transition-opacity">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Simpan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
