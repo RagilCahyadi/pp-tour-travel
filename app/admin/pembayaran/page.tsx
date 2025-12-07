@@ -42,9 +42,14 @@ export default function AdminPembayaranPage() {
   }
 
   const handleConfirmVerify = () => {
+    if (!verificationNote.trim()) {
+      alert('Mohon berikan catatan verifikasi!')
+      return
+    }
     console.log('Verifying payments:', selectedPayments)
     console.log('Verification note:', verificationNote)
     // TODO: Implement verification logic
+    alert(`${selectedPayments.length} pembayaran berhasil diverifikasi!`)
     setSelectedPayments([])
     setIsVerifyModalOpen(false)
     setVerificationNote('')
@@ -59,6 +64,7 @@ export default function AdminPembayaranPage() {
   const handleConfirmDelete = () => {
     console.log('Deleting payments:', selectedPayments)
     // TODO: Implement delete logic
+    alert(`${selectedPayments.length} data pembayaran berhasil dihapus!`)
     setSelectedPayments([])
     setIsDeleteModalOpen(false)
   }

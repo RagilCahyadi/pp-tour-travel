@@ -2,11 +2,14 @@
 
 import AdminSidebar from '@/components/AdminSidebar'
 import { useState } from 'react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default function AdminPenjadwalanPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSchedules, setSelectedSchedules] = useState<number[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     paketTour: '',
@@ -138,9 +141,128 @@ export default function AdminPenjadwalanPage() {
   }
 
   const handleSubmit = () => {
-    console.log('Form submitted:', formData)
-    // TODO: Implement actual save logic
+    if (selectedScheduleId) {
+      // Update existing schedule
+      console.log('Updating schedule ID:', selectedScheduleId, 'with data:', formData)
+      // TODO: Implement API call for update
+      alert('Jadwal berhasil diperbarui!')
+    } else {
+      // Create new schedule
+      console.log('Creating new schedule:', formData)
+      // TODO: Implement API call for create
+      alert('Jadwal baru berhasil ditambahkan!')
+    }
     handleCloseModal()
+  }
+
+  const handleDeleteClick = () => {
+    if (selectedSchedules.length > 0) {
+      setIsDeleteModalOpen(true)
+    }
+  }
+
+  const handleConfirmDelete = () => {
+    console.log('Deleting schedules:', selectedSchedules)
+    // TODO: Implement API call for delete
+    alert(`${selectedSchedules.length} jadwal berhasil dihapus!`)
+    setSelectedSchedules([])
+    setIsDeleteModalOpen(false)
+  }
+
+  const handleExportPDF = () => {
+    if (selectedSchedules.length === 0) {
+      alert('Pilih minimal satu jadwal untuk diexport!')
+      return
+    }
+
+    // Get selected schedules data
+    const selectedData = schedules.filter(schedule => 
+      selectedSchedules.includes(schedule.id)
+    )
+
+    // Create new PDF document
+    const doc = new jsPDF()
+
+    // Add title
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Laporan Penjadwalan Tour', 14, 20)
+
+    // Add metadata
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const currentDate = new Date().toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    })
+    doc.text(`Tanggal Export: ${currentDate}`, 14, 28)
+    doc.text(`Total Jadwal: ${selectedData.length}`, 14, 34)
+
+    // Prepare table data
+    const tableData = selectedData.map((schedule, index) => [
+      index + 1,
+      schedule.instalasi,
+      schedule.paketTour,
+      schedule.kode,
+      schedule.keberangkatan,
+      schedule.status === 'aktif' ? 'Aktif' : 'Tidak Aktif'
+    ])
+
+    // Add table
+    autoTable(doc, {
+      startY: 40,
+      head: [['No', 'Instalasi', 'Paket Tour', 'Kode', 'Keberangkatan', 'Status']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [0, 153, 102], // Green color matching the theme
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        textColor: [50, 50, 50]
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 25, halign: 'center' },
+        4: { cellWidth: 35, halign: 'center' },
+        5: { cellWidth: 30, halign: 'center' }
+      },
+      margin: { top: 40 }
+    })
+
+    // Add footer with page numbers
+    const pageCount = (doc as any).internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text(
+        `Halaman ${i} dari ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      )
+      doc.text(
+        'PP Tour Travel - Sistem Manajemen Penjadwalan',
+        14,
+        doc.internal.pageSize.getHeight() - 10
+      )
+    }
+
+    // Save the PDF
+    const fileName = `Jadwal_Tour_${new Date().getTime()}.pdf`
+    doc.save(fileName)
+
+    // Show success message
+    alert(`${selectedData.length} jadwal berhasil diexport ke PDF!`)
   }
 
   return (
@@ -159,11 +281,24 @@ export default function AdminPenjadwalanPage() {
             </div>
 
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={handleDeleteClick}
+                disabled={selectedSchedules.length === 0}
+                className="flex items-center gap-2 px-5 py-3 bg-[#e7000b] text-white rounded-[16.4px] hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Hapus</span>
+              </button>
+
+              <button 
+                onClick={handleExportPDF}
+                disabled={selectedSchedules.length === 0}
+                className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span className="text-[#364153]">Export</span>
+                <span className="text-[#364153]">Export PDF</span>
               </button>
               
               <button 
@@ -447,6 +582,46 @@ export default function AdminPenjadwalanPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Simpan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative" onClick={(e) => e.stopPropagation()}>
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-red-100 rounded-full p-4">
+                <svg className="w-12 h-12 text-[#e7000b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-bold text-[#101828] mb-2">Konfirmasi Penghapusan</h3>
+              <p className="text-[#6a7282] text-base">
+                Apakah Anda yakin ingin menghapus {selectedSchedules.length} jadwal yang dipilih? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-[#e7000b] text-white px-8 py-3 rounded-lg text-base hover:bg-[#c00009] transition-colors font-medium"
+              >
+                Ya, Hapus
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-[#99a1af] text-white px-8 py-3 rounded-lg text-base hover:bg-[#8891a1] transition-colors font-medium"
+              >
+                Batal
               </button>
             </div>
           </div>

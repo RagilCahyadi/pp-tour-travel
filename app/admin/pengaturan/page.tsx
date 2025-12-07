@@ -47,18 +47,37 @@ export default function AdminPengaturanPage() {
   }
 
   const handleSaveProfile = () => {
+    // Validate required fields
+    if (!profileData.nama || !profileData.email || !profileData.nomorHp) {
+      alert('Mohon lengkapi nama, email, dan nomor HP!')
+      return
+    }
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(profileData.email)) {
+      alert('Format email tidak valid!')
+      return
+    }
     console.log('Saving profile:', profileData)
-    // TODO: Implement save logic
+    // TODO: Implement API call to save profile
+    alert('Profil berhasil diperbarui!')
   }
 
   const handleSaveCompany = () => {
+    // Validate required fields
+    if (!companyData.namaPerusahaan || !companyData.emailBisnis) {
+      alert('Mohon lengkapi nama perusahaan dan email bisnis!')
+      return
+    }
     console.log('Saving company:', companyData)
-    // TODO: Implement save logic
+    // TODO: Implement API call to save company settings
+    alert('Pengaturan perusahaan berhasil diperbarui!')
   }
 
   const handleSaveNotifications = () => {
     console.log('Saving notifications:', notifications)
-    // TODO: Implement save logic
+    // TODO: Implement API call to save notification preferences
+    alert('Preferensi notifikasi berhasil disimpan!')
   }
 
   return (

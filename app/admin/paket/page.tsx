@@ -55,8 +55,15 @@ export default function AdminPaketPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // Validate required fields
+    if (!formData.namaPaket || !formData.tipePaket || !formData.nominalHarga) {
+      alert('Mohon lengkapi semua field yang wajib diisi!')
+      return
+    }
     // Handle form submission here
     console.log('Form data:', formData)
+    // TODO: Implement API call to create package
+    alert('Paket tour berhasil ditambahkan!')
     setIsModalOpen(false)
     // Reset form
     setFormData({
@@ -72,8 +79,15 @@ export default function AdminPaketPage() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // Validate required fields
+    if (!editFormData.namaPaket || !editFormData.tipePaket || !editFormData.nominalHarga) {
+      alert('Mohon lengkapi semua field yang wajib diisi!')
+      return
+    }
     // Handle edit form submission here
     console.log('Edit data:', editFormData)
+    // TODO: Implement API call to update package
+    alert('Paket tour berhasil diperbarui!')
     setIsEditModalOpen(false)
   }
 
@@ -100,6 +114,7 @@ export default function AdminPaketPage() {
   const handleConfirmDelete = () => {
     console.log('Deleting package:', selectedPackage)
     // TODO: Implement actual delete API call
+    alert('Paket tour berhasil dihapus!')
     setIsDeleteModalOpen(false)
     setSelectedPackage(null)
   }

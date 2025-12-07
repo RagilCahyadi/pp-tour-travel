@@ -24,8 +24,13 @@ export default function AdminPemesananPage() {
   }
 
   const handleSaveSubmission = () => {
+    if (!submissionStatus) {
+      alert('Mohon pilih status pengajuan!')
+      return
+    }
     console.log('Saving submission status:', submissionStatus)
     // TODO: Implement actual API call
+    alert('Status pengajuan pembatalan berhasil diperbarui!')
     setIsSubmissionModalOpen(false)
   }
 
@@ -38,8 +43,13 @@ export default function AdminPemesananPage() {
   }
 
   const handleSaveOrder = () => {
+    if (!orderStatus) {
+      alert('Mohon pilih status pemesanan!')
+      return
+    }
     console.log('Saving order:', { orderStatus, bookingToken })
     // TODO: Implement actual API call
+    alert('Status pemesanan berhasil diperbarui!')
     setIsOrderModalOpen(false)
   }
 
@@ -52,6 +62,7 @@ export default function AdminPemesananPage() {
   const handleConfirmDelete = () => {
     console.log('Deleting orders:', selectedOrders)
     // TODO: Implement actual API call
+    alert(`${selectedOrders.length} pemesanan berhasil dihapus!`)
     setSelectedOrders([])
     setIsDeleteModalOpen(false)
   }
