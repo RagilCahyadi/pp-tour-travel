@@ -3,14 +3,20 @@
 import AdminSidebar from '@/components/AdminSidebar'
 import Image from 'next/image'
 import { useState } from 'react'
+import { useTourPackages } from '@/lib/hooks/useTourPackages'
+import { formatRupiah } from '@/lib/utils/helpers'
+import { uploadImage, deleteImage, isValidUrl } from '@/lib/utils/storage'
 
 export default function AdminPaketPage() {
+  const { packages, loading, error, createPackage, updatePackage, deletePackage, toggleActiveStatus, refetch } = useTourPackages()
+  
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('Semua Tipe')
+  const [isUploading, setIsUploading] = useState(false)
   const [formData, setFormData] = useState({
     namaPaket: '',
     durasiIklan: '',
@@ -53,54 +59,171 @@ export default function AdminPaketPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Validate required fields
     if (!formData.namaPaket || !formData.tipePaket || !formData.nominalHarga) {
       alert('Mohon lengkapi semua field yang wajib diisi!')
       return
     }
-    // Handle form submission here
-    console.log('Form data:', formData)
-    // TODO: Implement API call to create package
-    alert('Paket tour berhasil ditambahkan!')
-    setIsModalOpen(false)
-    // Reset form
-    setFormData({
-      namaPaket: '',
-      durasiIklan: '',
-      tipePaket: '',
-      nominalHarga: '',
-      namaDaerah: '',
-      minimalPenumpang: '',
-      brosurFile: null
-    })
+    
+    setIsUploading(true)
+    
+    try {
+      let imageUrl = null
+      
+      // Upload image if file is selected
+      if (formData.brosurFile) {
+        console.log('Uploading image...', formData.brosurFile.name)
+        const { url, error: uploadError } = await uploadImage(formData.brosurFile)
+        
+        if (uploadError) {
+          alert(`❌ Gagal upload gambar: ${uploadError}`)
+          setIsUploading(false)
+          return
+        }
+        
+        imageUrl = url
+        console.log('Image uploaded:', imageUrl)
+      }
+      
+      const packageData = {
+        nama_paket: formData.namaPaket,
+        lokasi: formData.namaDaerah || 'Indonesia',
+        durasi: formData.durasiIklan || '1 hari',
+        tipe_paket: formData.tipePaket as 'Premium' | 'Ekonomis',
+        harga: parseInt(formData.nominalHarga.replace(/\D/g, '')) || 0,
+        minimal_penumpang: parseInt(formData.minimalPenumpang) || 1,
+        nama_daerah: formData.namaDaerah || undefined,
+        gambar_url: imageUrl || undefined
+      }
+      
+      const result = await createPackage(packageData)
+      
+      if (result.error) {
+        alert(`❌ Gagal menambahkan paket: ${result.error}`)
+        setIsUploading(false)
+        return
+      }
+      
+      alert('✅ Paket tour berhasil ditambahkan!')
+      setIsModalOpen(false)
+      // Reset form
+      setFormData({
+        namaPaket: '',
+        durasiIklan: '',
+        tipePaket: '',
+        nominalHarga: '',
+        namaDaerah: '',
+        minimalPenumpang: '',
+        brosurFile: null
+      })
+    } catch (err: any) {
+      console.error('Error creating package:', err)
+      alert(`❌ Terjadi kesalahan: ${err.message}`)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Validate required fields
     if (!editFormData.namaPaket || !editFormData.tipePaket || !editFormData.nominalHarga) {
       alert('Mohon lengkapi semua field yang wajib diisi!')
       return
     }
-    // Handle edit form submission here
-    console.log('Edit data:', editFormData)
-    // TODO: Implement API call to update package
-    alert('Paket tour berhasil diperbarui!')
-    setIsEditModalOpen(false)
+    
+    if (!selectedPackage) return
+    
+    console.log('Edit form data:', editFormData) // Debug
+    console.log('Selected package before update:', selectedPackage) // Debug
+    
+    setIsUploading(true)
+    
+    try {
+      let imageUrl = selectedPackage.gambar_url // Keep existing image URL
+      
+      // Upload new image if file is selected
+      if (editFormData.brosurFile) {
+        console.log('Uploading new image...', editFormData.brosurFile.name)
+        
+        // Delete old image if exists
+        if (selectedPackage.gambar_url && isValidUrl(selectedPackage.gambar_url)) {
+          console.log('Deleting old image...')
+          await deleteImage(selectedPackage.gambar_url)
+        }
+        
+        // Upload new image
+        const { url, error: uploadError } = await uploadImage(editFormData.brosurFile)
+        
+        if (uploadError) {
+          alert(`❌ Gagal upload gambar: ${uploadError}`)
+          setIsUploading(false)
+          return
+        }
+        
+        imageUrl = url
+        console.log('New image uploaded:', imageUrl)
+      }
+      
+      const packageData: any = {
+        nama_paket: editFormData.namaPaket,
+        lokasi: editFormData.namaDaerah || 'Indonesia',
+        durasi: editFormData.durasiIklan || '1 hari',
+        tipe_paket: editFormData.tipePaket as 'Premium' | 'Ekonomis',
+        harga: parseInt(editFormData.nominalHarga.replace(/\D/g, '')) || 0,
+        minimal_penumpang: parseInt(editFormData.minimalPenumpang) || 1,
+        nama_daerah: editFormData.pulauBali || editFormData.namaDaerah || null,
+        gambar_url: imageUrl
+      }
+      
+      console.log('Package data to update:', packageData) // Debug
+      
+      const result = await updatePackage(selectedPackage.id, packageData)
+      
+      if (result.error) {
+        console.error('Update error:', result.error)
+        alert(`❌ Gagal memperbarui paket: ${result.error}`)
+        setIsUploading(false)
+        return
+      }
+      
+      console.log('Update result:', result) // Debug
+      
+      // Show success message with updated data
+      const successMsg = `✅ Paket tour berhasil diperbarui!\n\n` +
+        `Nama: ${packageData.nama_paket}\n` +
+        `Lokasi: ${packageData.lokasi}\n` +
+        `Nama Daerah: ${packageData.nama_daerah}\n` +
+        `Harga: Rp ${packageData.harga.toLocaleString('id-ID')}\n` +
+        (imageUrl ? `Gambar: Berhasil diupload` : '')
+      
+      alert(successMsg)
+      setIsEditModalOpen(false)
+      setSelectedPackage(null)
+      
+      // Force refresh to show updated data
+      await refetch()
+    } catch (err: any) {
+      console.error('Error updating package:', err)
+      alert(`❌ Terjadi kesalahan: ${err.message}`)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const handleEditClick = (pkg: any) => {
+    console.log('Opening edit modal for package:', pkg) // Debug
     setSelectedPackage(pkg)
     setEditFormData({
-      namaPaket: pkg.name,
-      durasiIklan: pkg.duration,
-      tipePaket: pkg.type,
-      nominalHarga: pkg.price.replace('Rp ', '').replace('.', ''),
-      namaDaerah: pkg.location,
-      pulauBali: 'Pulau Bali',
-      minimalPenumpang: pkg.minPeople.replace(' orang', ''),
+      namaPaket: pkg.nama_paket || '',
+      durasiIklan: pkg.durasi || '',
+      tipePaket: pkg.tipe_paket || '',
+      nominalHarga: pkg.harga ? pkg.harga.toString() : '',
+      namaDaerah: pkg.lokasi || '',
+      pulauBali: pkg.nama_daerah || '',
+      minimalPenumpang: pkg.minimal_penumpang ? pkg.minimal_penumpang.toString() : '',
       brosurFile: null
     })
     setIsEditModalOpen(true)
@@ -111,12 +234,24 @@ export default function AdminPaketPage() {
     setIsDeleteModalOpen(true)
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Deleting package:', selectedPackage)
-    // TODO: Implement actual delete API call
-    alert('Paket tour berhasil dihapus!')
-    setIsDeleteModalOpen(false)
-    setSelectedPackage(null)
+  const handleConfirmDelete = async () => {
+    if (!selectedPackage) return
+    
+    try {
+      const result = await deletePackage(selectedPackage.id)
+      
+      if (result.error) {
+        alert(`❌ Gagal menghapus paket: ${result.error}`)
+        return
+      }
+      
+      alert('✅ Paket tour berhasil dihapus!')
+      setIsDeleteModalOpen(false)
+      setSelectedPackage(null)
+    } catch (err: any) {
+      console.error('Error deleting package:', err)
+      alert(`❌ Terjadi kesalahan: ${err.message}`)
+    }
   }
 
   const handleCancelDelete = () => {
@@ -124,72 +259,18 @@ export default function AdminPaketPage() {
     setSelectedPackage(null)
   }
 
-  // Mock data for packages
-  const packages = [
-    {
-      id: 1,
-      name: 'Paket Bali Premium',
-      image: '/images/bali-premium.jpg',
-      location: 'Bali, Indonesia',
-      duration: '4 Hari 2 Malam',
-      minPeople: '50 orang',
-      price: 'Rp 1.450.000',
-      type: 'Premium'
-    },
-    {
-      id: 2,
-      name: 'Paket Bali Ekonomis',
-      image: '/images/bali-ekonomis.jpg',
-      location: 'Bali, Indonesia',
-      duration: '3 Hari 1 Malam',
-      minPeople: '30 orang',
-      price: 'Rp 1.000.000',
-      type: 'Ekonomis'
-    },
-    {
-      id: 3,
-      name: 'Paket Yogyakarta Premium',
-      image: '/images/yogyakarta-premium.jpg',
-      location: 'Yogyakarta, Indonesia',
-      duration: '2 Hari 1 Malam',
-      minPeople: '40 orang',
-      price: 'Rp 750.000',
-      type: 'Premium'
-    },
-    {
-      id: 4,
-      name: 'Paket Yogyakarta Ekonomis',
-      image: '/images/yogyakarta-ekonomis.jpg',
-      location: 'Yogyakarta, Indonesia',
-      duration: '2 Hari 1 Malam',
-      minPeople: '25 orang',
-      price: 'Rp 690.000',
-      type: 'Ekonomis'
-    },
-    {
-      id: 5,
-      name: 'Paket Bandung Ekonomis',
-      image: '/images/bandung-ekonomis.jpg',
-      location: 'Bandung, Indonesia',
-      duration: '3 Hari 1 Malam',
-      minPeople: '35 orang',
-      price: 'Rp 990.000',
-      type: 'Ekonomis'
-    }
-  ]
-
   // Filter packages based on search and type
   const filteredPackages = packages.filter(pkg => {
-    const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         pkg.location.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = selectedType === 'Semua Tipe' || pkg.type === selectedType
+    const matchesSearch = pkg.nama_paket.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         pkg.lokasi.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesType = selectedType === 'Semua Tipe' || pkg.tipe_paket === selectedType
     return matchesSearch && matchesType
   })
 
   const stats = {
     total: packages.length,
-    premium: packages.filter(p => p.type === 'Premium').length,
-    ekonomis: packages.filter(p => p.type === 'Ekonomis').length
+    premium: packages.filter(p => p.tipe_paket === 'Premium').length,
+    ekonomis: packages.filter(p => p.tipe_paket === 'Ekonomis').length
   }
 
   return (
@@ -315,40 +396,85 @@ export default function AdminPaketPage() {
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-16 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 border-4 border-[#009966] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-lg text-gray-600">Memuat data paket...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl shadow-md p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-lg font-medium text-red-700 mb-1">Gagal memuat data</p>
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-2 px-4 py-2 bg-[#009966] text-white rounded-lg hover:bg-[#008055] transition-colors"
+                >
+                  Coba Lagi
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Package Cards Grid */}
-          <div className="grid grid-cols-3 gap-6">
-            {filteredPackages.length > 0 ? filteredPackages.map((pkg) => (
+          {!loading && !error && (
+            <div className="grid grid-cols-3 gap-6">
+              {filteredPackages.length > 0 ? filteredPackages.map((pkg) => (
               <div key={pkg.id} className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden">
                 {/* Package Image */}
                 <div className="relative h-48">
-                  <Image
-                    src={pkg.image}
-                    alt={pkg.name}
-                    fill
-                    className="object-cover"
-                  />
+                  {isValidUrl(pkg.gambar_url) ? (
+                    <Image
+                      src={pkg.gambar_url!}
+                      alt={pkg.nama_paket}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#009966] to-[#00bc7d] flex items-center justify-center">
+                      <div className="text-center">
+                        <svg className="w-16 h-16 text-white opacity-50 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {pkg.gambar_url && (
+                          <p className="text-xs text-white opacity-75 px-4">{pkg.gambar_url}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
                   <div className="absolute top-2 right-2">
                     <span className={`px-3 py-1 rounded-full text-xs text-white border ${
-                      pkg.type === 'Premium' 
+                      pkg.tipe_paket === 'Premium' 
                         ? 'bg-[rgba(254,154,0,0.9)] border-[#ffb900]' 
                         : 'bg-[rgba(43,127,255,0.9)] border-[#51a2ff]'
                     }`}>
-                      {pkg.type}
+                      {pkg.tipe_paket}
                     </span>
                   </div>
                 </div>
 
                 {/* Package Details */}
                 <div className="p-5">
-                  <h3 className="text-xl font-semibold text-[#101828] mb-2">{pkg.name}</h3>
+                  <h3 className="text-xl font-semibold text-[#101828] mb-2">{pkg.nama_paket}</h3>
                   
                   <div className="flex items-center gap-2 mb-4">
                     <svg className="w-4 h-4 text-[#6a7282]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span className="text-sm text-[#6a7282]">{pkg.location}</span>
+                    <span className="text-sm text-[#6a7282]">{pkg.lokasi}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-4">
@@ -356,20 +482,20 @@ export default function AdminPaketPage() {
                       <svg className="w-4 h-4 text-[#4a5565]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-sm text-[#4a5565]">{pkg.duration}</span>
+                      <span className="text-sm text-[#4a5565]">{pkg.durasi}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-[#4a5565]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span className="text-sm text-[#4a5565]">Min. {pkg.minPeople}</span>
+                      <span className="text-sm text-[#4a5565]">Min. {pkg.minimal_penumpang} orang</span>
                     </div>
                   </div>
 
                   <div className="border-t border-gray-100 pt-4 flex items-center justify-between">
                     <div>
                       <p className="text-base text-[#6a7282]">Mulai dari</p>
-                      <p className="text-base text-[#009966] font-semibold">{pkg.price}</p>
+                      <p className="text-base text-[#009966] font-semibold">{formatRupiah(pkg.harga)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button 
@@ -393,11 +519,26 @@ export default function AdminPaketPage() {
                 </div>
               </div>
             )) : (
-              <div className="col-span-3 text-center py-12">
-                <p className="text-gray-500 text-lg">Tidak ada paket yang ditemukan</p>
+              <div className="col-span-3 bg-white border border-gray-100 rounded-2xl shadow-md p-16 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-lg font-medium text-gray-700 mb-1">Belum ada paket tour</p>
+                    <p className="text-sm text-gray-500">Tambahkan paket tour pertama Anda untuk ditampilkan di sini</p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-2xl hover:from-[#008055] hover:to-[#00a66b] transition-colors"
+                  >
+                    Tambah Paket Tour
+                  </button>
+                </div>
               </div>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -534,9 +675,17 @@ export default function AdminPaketPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-[#009966] text-white py-3 rounded-lg text-base font-medium hover:bg-[#008055] transition-colors"
+                disabled={isUploading}
+                className="w-full bg-[#009966] text-white py-3 rounded-lg text-base font-medium hover:bg-[#008055] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Di Simpan
+                {isUploading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Mengupload...</span>
+                  </>
+                ) : (
+                  'Di Simpan'
+                )}
               </button>
             </form>
           </div>
@@ -630,34 +779,50 @@ export default function AdminPaketPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm text-[#364153]">Pulau Bali</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={editFormData.brosurFile?.name || 'bali.jpg'}
-                      placeholder="bali.jpg"
-                      readOnly
-                      className="w-48 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none placeholder:text-gray-400 cursor-pointer"
-                      onClick={() => document.getElementById('editFileInput')?.click()}
-                    />
-                    <input
-                      id="editFileInput"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleEditFileChange}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('editFileInput')?.click()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                    </button>
-                  </div>
+                  <label className="block text-sm text-[#364153]">Pulau</label>
+                  <input
+                    type="text"
+                    name="pulauBali"
+                    value={editFormData.pulauBali}
+                    onChange={handleEditInputChange}
+                    placeholder="Pulau Bali"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#009966] placeholder:text-gray-400"
+                  />
                 </div>
+              </div>
+
+              {/* Upload Gambar */}
+              <div className="space-y-2">
+                <label className="block text-sm text-[#364153]">Upload Gambar Paket</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={editFormData.brosurFile?.name || (selectedPackage?.gambar_url ? selectedPackage.gambar_url.split('/').pop() : 'Pilih gambar...')}
+                    placeholder="Pilih file gambar"
+                    readOnly
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none placeholder:text-gray-400 cursor-pointer bg-gray-50"
+                    onClick={() => document.getElementById('editFileInput')?.click()}
+                  />
+                  <input
+                    id="editFileInput"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('editFileInput')?.click()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </button>
+                </div>
+                {editFormData.brosurFile && (
+                  <p className="text-xs text-[#009966]">✓ File dipilih: {editFormData.brosurFile.name}</p>
+                )}
               </div>
 
               {/* Row 4: Minimal Penumpang */}
@@ -676,9 +841,17 @@ export default function AdminPaketPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-[#009966] text-white py-3 rounded-lg text-base font-medium hover:bg-[#008055] transition-colors"
+                disabled={isUploading}
+                className="w-full bg-[#009966] text-white py-3 rounded-lg text-base font-medium hover:bg-[#008055] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Di Simpan
+                {isUploading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Mengupload...</span>
+                  </>
+                ) : (
+                  'Di Simpan'
+                )}
               </button>
             </form>
           </div>

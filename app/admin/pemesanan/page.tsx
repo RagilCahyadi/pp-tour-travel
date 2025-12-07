@@ -49,9 +49,10 @@ export default function AdminPemesananPage() {
 
   const handleManageOrder = (order: any) => {
     if (!order) return
+    console.log('Opening modal with order:', order) // Debug
     setSelectedOrder(order)
     setOrderStatus(order.status || '')
-    setBookingToken('')
+    setBookingToken(order.kode_booking || '')
     setIsOrderModalOpen(true)
   }
 
@@ -60,13 +61,17 @@ export default function AdminPemesananPage() {
       alert('Mohon pilih status pemesanan!')
       return
     }
+    
+    console.log('Updating booking:', { id: selectedOrder.id, status: orderStatus }) // Debug
+    
     try {
       await updateBookingStatus(selectedOrder.id, orderStatus as any)
-      alert('Status pemesanan berhasil diperbarui!')
+      alert(`✅ Status pemesanan berhasil diperbarui menjadi "${getStatusLabel(orderStatus)}"!`)
       setIsOrderModalOpen(false)
       refetch()
-    } catch (err) {
-      alert('Gagal memperbarui status pemesanan!')
+    } catch (err: any) {
+      console.error('Error updating booking status:', err)
+      alert(`❌ Gagal memperbarui status pemesanan!\n\nError: ${err.message || 'Unknown error'}`)
     }
   }
 
@@ -484,12 +489,15 @@ export default function AdminPemesananPage() {
                     <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {bookings.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center">
+                      <td colSpan={7} className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center gap-4">
                           <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -509,7 +517,7 @@ export default function AdminPemesananPage() {
                     </tr>
                   ) : filteredBookings.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center">
+                      <td colSpan={7} className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center gap-4">
                           <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -551,6 +559,19 @@ export default function AdminPemesananPage() {
                         </td>
                         <td className="px-6 py-6">
                           {getStatusBadge(booking.status)}
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleManageOrder(booking)}
+                              className="p-2 text-[#009966] hover:bg-green-50 rounded-lg transition-colors"
+                              title="Kelola Pesanan"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -701,7 +722,7 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Nama Pelanggan</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.customerName}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrder.customers?.nama_pelanggan || selectedOrder.customerName || '-'}</p>
                     </div>
                   </div>
 
@@ -709,7 +730,7 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Instalasi</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.company}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrder.customers?.nama_perusahaan || selectedOrder.company || '-'}</p>
                     </div>
                   </div>
 
@@ -717,7 +738,12 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Informasi Kontak</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.contact}</p>
+                      <div className="text-sm text-[#101828]">
+                        <p>{selectedOrder.customers?.nomor_telepon || selectedOrder.contact || '-'}</p>
+                        {selectedOrder.customers?.email && (
+                          <p className="text-gray-600 mt-1">{selectedOrder.customers.email}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -728,7 +754,10 @@ export default function AdminPemesananPage() {
                   <div>
                     <label className="block text-sm text-[#364153] mb-2">Pilih Paket</label>
                     <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                      <p className="text-sm text-[#101828]">{selectedOrder.package}</p>
+                      <p className="text-sm text-[#101828]">{selectedOrder.tour_packages?.nama_paket || selectedOrder.package || '-'}</p>
+                      {selectedOrder.jumlah_pax && (
+                        <p className="text-xs text-gray-600 mt-1">{selectedOrder.jumlah_pax} pax • {formatRupiah(selectedOrder.total_biaya || 0)}</p>
+                      )}
                     </div>
                   </div>
 
@@ -742,9 +771,10 @@ export default function AdminPemesananPage() {
                         className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#101828] appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009966]"
                       >
                         <option value="">Pilih Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Dikonfirmasi">Dikonfirmasi</option>
-                        <option value="Dibatalkan">Dibatalkan</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Dikonfirmasi</option>
+                        <option value="cancelled">Dibatalkan</option>
+                        <option value="completed">Selesai</option>
                       </select>
                       <svg className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -772,9 +802,27 @@ export default function AdminPemesananPage() {
                 <div>
                   <label className="block text-sm text-[#364153] mb-2">Catatan Pelanggan</label>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 min-h-[62px]">
-                    <p className="text-sm text-[#101828] whitespace-pre-wrap">{selectedOrder.notes || '-'}</p>
+                    <p className="text-sm text-[#101828] whitespace-pre-wrap">{selectedOrder.catatan || selectedOrder.notes || '-'}</p>
                   </div>
                 </div>
+
+                {/* Kode Booking */}
+                <div>
+                  <label className="block text-sm text-[#364153] mb-2">Kode Booking</label>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
+                    <code className="text-sm font-mono text-[#101828]">{selectedOrder.kode_booking || '-'}</code>
+                  </div>
+                </div>
+
+                {/* Tanggal Keberangkatan */}
+                {selectedOrder.tanggal_keberangkatan && (
+                  <div>
+                    <label className="block text-sm text-[#364153] mb-2">Tanggal Keberangkatan</label>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
+                      <p className="text-sm text-[#101828]">{formatDate(selectedOrder.tanggal_keberangkatan)}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
