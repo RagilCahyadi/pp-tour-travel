@@ -1,11 +1,13 @@
 'use client'
 
 import AdminSidebar from '@/components/AdminSidebar'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useBookings } from '@/lib/hooks/useBookings'
+import { formatRupiah, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils/helpers'
 
 export default function AdminPemesananPage() {
   const [selectedTab, setSelectedTab] = useState('all')
-  const [selectedOrders, setSelectedOrders] = useState<number[]>([])
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null)
   const [submissionStatus, setSubmissionStatus] = useState('')
@@ -15,6 +17,17 @@ export default function AdminPemesananPage() {
   const [bookingToken, setBookingToken] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  
+  const { bookings, loading, error, updateBookingStatus, deleteBooking, refetch } = useBookings()
+
+  useEffect(() => {
+    console.log('Bookings state updated:', { 
+      count: bookings.length, 
+      loading, 
+      error,
+      sample: bookings[0] 
+    })
+  }, [bookings, loading, error])
 
   const handleManageSubmission = (submission: any) => {
     if (!submission) return
@@ -42,15 +55,19 @@ export default function AdminPemesananPage() {
     setIsOrderModalOpen(true)
   }
 
-  const handleSaveOrder = () => {
+  const handleSaveOrder = async () => {
     if (!orderStatus) {
       alert('Mohon pilih status pemesanan!')
       return
     }
-    console.log('Saving order:', { orderStatus, bookingToken })
-    // TODO: Implement actual API call
-    alert('Status pemesanan berhasil diperbarui!')
-    setIsOrderModalOpen(false)
+    try {
+      await updateBookingStatus(selectedOrder.id, orderStatus as any)
+      alert('Status pemesanan berhasil diperbarui!')
+      setIsOrderModalOpen(false)
+      refetch()
+    } catch (err) {
+      alert('Gagal memperbarui status pemesanan!')
+    }
   }
 
   const handleDeleteClick = () => {
@@ -59,41 +76,37 @@ export default function AdminPemesananPage() {
     }
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Deleting orders:', selectedOrders)
-    // TODO: Implement actual API call
-    alert(`${selectedOrders.length} pemesanan berhasil dihapus!`)
-    setSelectedOrders([])
-    setIsDeleteModalOpen(false)
+  const handleConfirmDelete = async () => {
+    try {
+      await Promise.all(selectedOrders.map(id => deleteBooking(id)))
+      alert(`${selectedOrders.length} pemesanan berhasil dihapus!`)
+      setSelectedOrders([])
+      setIsDeleteModalOpen(false)
+      refetch()
+    } catch (err) {
+      alert('Gagal menghapus pemesanan!')
+    }
   }
+
+  // Filter bookings based on search and tab
+  const filteredBookings = bookings.filter(booking => {
+    const matchesTab = selectedTab === 'all' || booking.status === selectedTab
+    const matchesSearch = searchQuery === '' || 
+                         booking.customers.nama_pelanggan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         booking.customers.nama_perusahaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         booking.kode_booking.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesTab && matchesSearch
+  })
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      if (selectedTab === 'cancelled') {
-        const filtered = cancellationSubmissions.filter(submission => {
-          return searchQuery === '' ||
-                 submission.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 submission.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 submission.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-        })
-        setSelectedOrders(filtered.map(submission => submission.id))
-      } else {
-        const filtered = orders.filter(order => {
-          const matchesTab = selectedTab === 'all' || order.status === selectedTab
-          const matchesSearch = searchQuery === '' || 
-                               order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                               order.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                               order.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-          return matchesTab && matchesSearch
-        })
-        setSelectedOrders(filtered.map(order => order.id))
-      }
+      setSelectedOrders(filteredBookings.map(booking => booking.id))
     } else {
       setSelectedOrders([])
     }
   }
 
-  const handleSelectOrder = (id: number) => {
+  const handleSelectOrder = (id: string) => {
     if (selectedOrders.includes(id)) {
       setSelectedOrders(selectedOrders.filter(orderId => orderId !== id))
     } else {
@@ -101,93 +114,45 @@ export default function AdminPemesananPage() {
     }
   }
 
-  // Mock data for orders
-  const orders = [
-    {
-      id: 1,
-      customerName: 'Bambang',
-      company: 'PT. Amerta Jaya',
-      package: 'Paket Bali Premium',
-      contact: '081026461691',
-      bookingCode: 'BAMH760',
-      status: 'confirmed',
-      notes: 'Sudah di bayar nih, tolong di ACC'
-    },
-    {
-      id: 2,
-      customerName: 'Sigit',
-      company: 'PT. Amerta Jaya',
-      package: 'Paket Bali Ekonomis',
-      contact: '082276529644',
-      bookingCode: 'BHRS937',
-      status: 'pending',
-      notes: 'Mohon segera diproses, untuk acara perusahaan bulan depan'
-    },
-    {
-      id: 3,
-      customerName: 'Dewi Kusuma',
-      company: 'CV. Maju Bersama',
-      package: 'Paket Yogyakarta Premium',
-      contact: '085612345678',
-      bookingCode: 'DEWK123',
-      status: 'confirmed'
-    },
-    {
-      id: 4,
-      customerName: 'Andi Wijaya',
-      company: 'PT. Sukses Makmur',
-      package: 'Paket Bandung Ekonomis',
-      contact: '081234567890',
-      bookingCode: 'ANDW456',
-      status: 'cancelled'
-    },
-    {
-      id: 5,
-      customerName: 'Mbak Esy',
-      company: 'PT A',
-      package: 'Paket B&B Premium',
-      contact: '081234567891',
-      bookingCode: 'MBLS789',
-      status: 'cancelled'
-    },
-    {
-      id: 6,
-      customerName: 'Siti Nurhaliza',
-      company: 'CV. Berkah Jaya',
-      package: 'Paket Lombok Premium',
-      contact: '085612345679',
-      bookingCode: 'SITN321',
-      status: 'cancelled'
-    }
-  ]
+  if (loading) {
+    return (
+      <div className="bg-white relative min-h-screen flex">
+        <AdminSidebar activePage="pemesanan" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data pemesanan...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-  // Mock data for cancellation submissions
-  const cancellationSubmissions = [
-    {
-      id: 4,
-      customerName: 'Andi Wijaya',
-      company: 'PT. Sukses Makmur',
-      package: 'Paket Bandung Ekonomis',
-      bookingCode: 'ANDW456',
-      submissionStatus: 'processing' // diproses
-    },
-    {
-      id: 5,
-      customerName: 'Mbak Esy',
-      company: 'PT A',
-      package: 'Paket B&B Premium',
-      bookingCode: 'MBLS789',
-      submissionStatus: 'pending' // belum diproses
-    },
-    {
-      id: 6,
-      customerName: 'Siti Nurhaliza',
-      company: 'CV. Berkah Jaya',
-      package: 'Paket Lombok Premium',
-      bookingCode: 'SITN321',
-      submissionStatus: 'approved' // disetujui
-    }
-  ]
+  if (error) {
+    return (
+      <div className="bg-white relative min-h-screen flex">
+        <AdminSidebar activePage="pemesanan" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-2xl p-8">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <svg className="w-12 h-12 text-red-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-xl font-semibold text-red-900 mb-2">Error Memuat Data</h3>
+              <p className="text-red-700 mb-4">{error}</p>
+              <p className="text-sm text-red-600">Periksa koneksi Supabase dan pastikan environment variables sudah diset dengan benar.</p>
+              <button 
+                onClick={() => refetch()} 
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const getSubmissionStatusBadge = (status: string) => {
     switch (status) {
@@ -253,27 +218,11 @@ export default function AdminPemesananPage() {
     }
   }
 
-  const filteredOrders = orders.filter(order => {
-    const matchesTab = selectedTab === 'all' || order.status === selectedTab
-    const matchesSearch = searchQuery === '' || 
-                         order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesTab && matchesSearch
-  })
-
-  const filteredSubmissions = cancellationSubmissions.filter(submission => {
-    return searchQuery === '' ||
-           submission.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           submission.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           submission.bookingCode.toLowerCase().includes(searchQuery.toLowerCase())
-  })
-
   const stats = {
-    total: orders.length,
-    confirmed: orders.filter(o => o.status === 'confirmed').length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    cancelled: orders.filter(o => o.status === 'cancelled').length
+    total: bookings.length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+    pending: bookings.filter(b => b.status === 'pending').length,
+    cancelled: bookings.filter(b => b.status === 'cancelled').length
   }
 
   return (
@@ -288,14 +237,24 @@ export default function AdminPemesananPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">
-                {selectedTab === 'cancelled' ? 'Kelola Pengajuan' : 'Kelola Pemesanan Pelanggan'}
+                Kelola Pemesanan Pelanggan
               </h1>
               <p className="text-[#6a7282] text-base">
-                {selectedTab === 'cancelled' ? 'Kelola dan proses pengajuan pembatalan pesanan' : 'Monitor dan kelola semua pemesanan'}
+                Monitor dan kelola semua pemesanan
               </p>
             </div>
 
             <div className="flex gap-3">
+              <button 
+                onClick={() => refetch()}
+                className="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                title="Refresh data dari Supabase"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Refresh</span>
+              </button>
               <button 
                 onClick={handleDeleteClick}
                 className="bg-[#e7000b] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -308,10 +267,9 @@ export default function AdminPemesananPage() {
               </button>
               <button 
                 onClick={() => {
-                  if (selectedTab === 'cancelled' && selectedOrders.length > 0) {
-                    handleManageSubmission(cancellationSubmissions.find(s => s.id === selectedOrders[0]))
-                  } else if (selectedTab !== 'cancelled' && selectedOrders.length > 0) {
-                    handleManageOrder(orders.find(o => o.id === selectedOrders[0]))
+                  if (selectedOrders.length > 0) {
+                    const booking = bookings.find(b => b.id === selectedOrders[0])
+                    if (booking) handleManageOrder(booking)
                   }
                 }}
                 className="bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:from-[#008055] hover:to-[#00a66b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -320,7 +278,7 @@ export default function AdminPemesananPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                <span>{selectedTab === 'cancelled' ? 'Kelola Pengajuan' : 'Kelola Pesanan'}</span>
+                <span>Kelola Pesanan</span>
               </button>
             </div>
           </div>
@@ -507,123 +465,95 @@ export default function AdminPemesananPage() {
                       <input
                         type="checkbox"
                         onChange={handleSelectAll}
-                        checked={selectedTab === 'cancelled' 
-                          ? selectedOrders.length === filteredSubmissions.length && filteredSubmissions.length > 0
-                          : selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                        checked={selectedOrders.length === filteredBookings.length && filteredBookings.length > 0}
                         className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
                       />
                     </th>
-                    {selectedTab === 'cancelled' ? (
-                      <>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Nama Pelanggan
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Instalasi
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Paket Dibatalkan
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Kode Booking
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Status Pengajuan
-                        </th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Pelanggan
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Paket
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Kontak
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Kode Booking
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
-                          Status
-                        </th>
-                      </>
-                    )}
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Pelanggan
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Paket
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Kontak
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Kode Booking
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-[#4a5565] uppercase tracking-wider">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {selectedTab === 'cancelled' ? (
-                    filteredSubmissions.map((submission) => (
-                      <tr key={submission.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-6">
-                          <input
-                            type="checkbox"
-                            checked={selectedOrders.includes(submission.id)}
-                            onChange={() => handleSelectOrder(submission.id)}
-                            className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
-                          />
-                        </td>
-                        <td className="px-6 py-6">
-                          <p className="text-[#101828] text-base">{submission.customerName}</p>
-                        </td>
-                        <td className="px-6 py-6">
-                          <p className="text-[#101828] text-base">{submission.company}</p>
-                        </td>
-                        <td className="px-6 py-6">
-                          <p className="text-[#101828] text-base">{submission.package}</p>
-                        </td>
-                        <td className="px-6 py-6">
-                          <code className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-mono text-[#101828]">
-                            {submission.bookingCode}
-                          </code>
-                        </td>
-                        <td className="px-6 py-6">
-                          {getSubmissionStatusBadge(submission.submissionStatus)}
-                        </td>
-                      </tr>
-                    ))
+                  {bookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-16 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <div>
+                            <p className="text-lg font-medium text-gray-700 mb-1">Belum ada pemesanan</p>
+                            <p className="text-sm text-gray-500">Data pemesanan akan muncul di sini setelah ada booking dari customer</p>
+                          </div>
+                          <button
+                            onClick={() => refetch()}
+                            className="mt-2 px-4 py-2 bg-[#009966] text-white rounded-lg hover:bg-[#008055] transition-colors"
+                          >
+                            Refresh Data
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredBookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-16 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <div>
+                            <p className="text-lg font-medium text-gray-700 mb-1">Tidak ditemukan</p>
+                            <p className="text-sm text-gray-500">Tidak ada pemesanan yang sesuai dengan filter atau pencarian</p>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
                   ) : (
-                    filteredOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    filteredBookings.map((booking) => (
+                      <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-6">
                           <input
                             type="checkbox"
-                            checked={selectedOrders.includes(order.id)}
-                            onChange={() => handleSelectOrder(order.id)}
+                            checked={selectedOrders.includes(booking.id)}
+                            onChange={() => handleSelectOrder(booking.id)}
                             className="w-5 h-5 rounded-md border-gray-300 text-[#009966] focus:ring-[#009966]"
                           />
                         </td>
                         <td className="px-6 py-6">
                           <div>
-                            <p className="text-[#101828] text-base font-medium">{order.customerName}</p>
-                            <p className="text-[#6a7282] text-base">{order.company}</p>
+                            <p className="text-[#101828] text-base font-medium">{booking.customers.nama_pelanggan}</p>
+                            <p className="text-[#6a7282] text-base">{booking.customers.nama_perusahaan || '-'}</p>
                           </div>
                         </td>
                         <td className="px-6 py-6">
-                          <p className="text-[#101828] text-base">{order.package}</p>
+                          <p className="text-[#101828] text-base">{booking.tour_packages.nama_paket}</p>
                         </td>
                         <td className="px-6 py-6">
-                          <p className="text-[#101828] text-base">{order.contact}</p>
+                          <p className="text-[#101828] text-base">{booking.customers.nomor_telepon || '-'}</p>
                         </td>
                         <td className="px-6 py-6">
                           <code className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-mono text-[#101828]">
-                            {order.bookingCode}
+                            {booking.kode_booking}
                           </code>
                         </td>
                         <td className="px-6 py-6">
-                          {getStatusBadge(order.status)}
+                          {getStatusBadge(booking.status)}
                         </td>
                       </tr>
                     ))
-                  )}
-                  {((selectedTab === 'cancelled' && filteredSubmissions.length === 0) || 
-                    (selectedTab !== 'cancelled' && filteredOrders.length === 0)) && (
-                    <tr>
-                      <td colSpan={selectedTab === 'cancelled' ? 5 : 6} className="px-6 py-12 text-center">
-                        <p className="text-gray-500 text-lg">Tidak ada data yang ditemukan</p>
-                      </td>
-                    </tr>
                   )}
                 </tbody>
               </table>
@@ -632,7 +562,7 @@ export default function AdminPemesananPage() {
             {/* Pagination */}
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
               <p className="text-[#4a5565] text-base">
-                Menampilkan <span className="font-semibold">1-{selectedTab === 'cancelled' ? filteredSubmissions.length : filteredOrders.length}</span> dari <span className="font-semibold">{selectedTab === 'cancelled' ? filteredSubmissions.length : filteredOrders.length}</span> pesanan
+                Menampilkan <span className="font-semibold">1-{filteredBookings.length}</span> dari <span className="font-semibold">{filteredBookings.length}</span> pesanan
               </p>
               <div className="flex gap-2">
                 <button className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors">

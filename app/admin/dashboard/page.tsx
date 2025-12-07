@@ -2,8 +2,33 @@
 
 import AdminSidebar from '@/components/AdminSidebar'
 import Link from 'next/link'
+import { useDashboard } from '@/lib/hooks/useDashboard'
+import { formatRupiah, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils/helpers'
 
 export default function AdminDashboard() {
+  const { stats, recentBookings, upcomingDepartures, loading, error } = useDashboard()
+
+  if (loading) {
+    return (
+      <div className="bg-white relative min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white relative min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Error: {error}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white relative min-h-screen flex">
       {/* Sidebar */}
@@ -70,12 +95,9 @@ export default function AdminDashboard() {
                     </svg>
                     <span>Booking Bulan Ini</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">24</h2>
-                  <div className="flex items-center gap-2 text-sm text-[#009966]">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                    </svg>
-                    <span>+15% dari bulan lalu</span>
+                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.booking_bulan_ini || 0}</h2>
+                  <div className="flex items-center gap-2 text-sm text-[#6a7282]">
+                    <span>Total pemesanan</span>
                   </div>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg flex items-center justify-center">
@@ -98,12 +120,9 @@ export default function AdminDashboard() {
                     </svg>
                     <span>Pendapatan Bulan Ini</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">Rp 72,5 jt</h2>
-                  <div className="flex items-center gap-2 text-sm text-[#009966]">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                    </svg>
-                    <span>+25% dari bulan lalu</span>
+                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{formatRupiah(stats?.pendapatan_bulan_ini || 0)}</h2>
+                  <div className="flex items-center gap-2 text-sm text-[#6a7282]">
+                    <span>Total terkonfirmasi</span>
                   </div>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg flex items-center justify-center">
@@ -125,7 +144,7 @@ export default function AdminDashboard() {
                     </svg>
                     <span>Menunggu Verifikasi</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">3</h2>
+                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.menunggu_verifikasi || 0}</h2>
                   <div className="flex items-center gap-2 text-sm text-[#e17100]">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -151,8 +170,8 @@ export default function AdminDashboard() {
                     </svg>
                     <span>Keberangkatan Minggu Ini</span>
                   </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">7</h2>
-                  <p className="text-sm text-[#4a5565]">2 hari ini</p>
+                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.keberangkatan_minggu_ini || 0}</h2>
+                  <p className="text-sm text-[#4a5565]">Sudah terjadwal</p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -258,59 +277,42 @@ export default function AdminDashboard() {
                 </Link>
               </div>
               <div className="space-y-3">
-                {/* Booking Item 1 */}
-                <div className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-[#101828]">Sigit</span>
-                        <span className="bg-yellow-100 text-[#bb4d00] text-xs px-2 py-1 rounded">Menunggu Verifikasi</span>
+                {recentBookings.length === 0 ? (
+                  <p className="text-center text-gray-400 py-8">Belum ada booking terbaru</p>
+                ) : (
+                  recentBookings.map((booking) => (
+                    <div key={booking.id} className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          booking.status === 'confirmed' ? 'bg-emerald-100' : 
+                          booking.status === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+                        }`}>
+                          <svg className={`w-6 h-6 ${
+                            booking.status === 'confirmed' ? 'text-emerald-600' : 
+                            booking.status === 'pending' ? 'text-yellow-600' : 'text-gray-600'
+                          }`} fill="currentColor" viewBox="0 0 20 20">
+                            {booking.status === 'confirmed' ? (
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            ) : (
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            )}
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-[#101828]">{booking.nama_pelanggan}</span>
+                            <span className={`text-xs px-2 py-1 rounded ${getStatusColor(booking.status)}`}>
+                              {getStatusLabel(booking.status)}
+                            </span>
+                          </div>
+                          <p className="text-[#6a7282] text-sm">{booking.nama_paket} • {booking.jumlah_pax} orang</p>
+                          <p className="text-[#99a1af] text-sm">{formatDate(booking.created_at)}</p>
+                        </div>
                       </div>
-                      <p className="text-[#6a7282] text-sm">Paket Bali Ekonomis • 2 orang</p>
-                      <p className="text-[#99a1af] text-sm">10 menit lalu</p>
+                      <span className="text-[#99a1af] text-sm">{booking.kode_booking}</span>
                     </div>
-                  </div>
-                  <span className="text-[#99a1af] text-sm">BHRS937</span>
-                </div>
-
-                {/* Booking Item 2 */}
-                <div className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <span className="font-medium text-[#101828] block mb-1">Dewi Kusuma</span>
-                      <p className="text-[#6a7282] text-sm">Paket Yogyakarta Premium • 3 orang</p>
-                      <p className="text-[#99a1af] text-sm">1 jam lalu</p>
-                    </div>
-                  </div>
-                  <span className="text-[#99a1af] text-sm">DEWK123</span>
-                </div>
-
-                {/* Booking Item 3 */}
-                <div className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <span className="font-medium text-[#101828] block mb-1">Bambang</span>
-                      <p className="text-[#6a7282] text-sm">Paket Bali Premium • 4 orang</p>
-                      <p className="text-[#99a1af] text-sm">2 jam lalu</p>
-                    </div>
-                  </div>
-                  <span className="text-[#99a1af] text-sm">BAMH760</span>
-                </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -320,83 +322,36 @@ export default function AdminDashboard() {
                 Keberangkatan Terdekat
               </h3>
               <div className="space-y-4">
-                {/* Departure 1 */}
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-[#101828] mb-1">Bali 5D4N</h4>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282] mb-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                        <span>Hari Ini, 08:00</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282]">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                        </svg>
-                        <span>10 orang</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Departure 2 */}
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-[#101828] mb-1">Bromo 3D2N</h4>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282] mb-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                        <span>Besok, 05:00</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282]">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                        </svg>
-                        <span>8 orang</span>
+                {upcomingDepartures.length === 0 ? (
+                  <p className="text-center text-gray-400 py-8">Belum ada keberangkatan mendatang</p>
+                ) : (
+                  upcomingDepartures.map((departure) => (
+                    <div key={departure.id} className="border border-gray-200 rounded-2xl p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-[#101828] mb-1">{departure.nama_paket}</h4>
+                          <div className="flex items-center gap-1 text-xs text-[#6a7282] mb-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                            <span>{formatDate(departure.tanggal_keberangkatan)}, {departure.waktu_keberangkatan}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-[#6a7282]">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                            </svg>
+                            <span>{departure.total_peserta || 0} orang</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Departure 3 */}
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-[#101828] mb-1">Yogyakarta 4D3N</h4>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282] mb-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                        </svg>
-                        <span>8 Des, 07:00</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-[#6a7282]">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                        </svg>
-                        <span>6 orang</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
