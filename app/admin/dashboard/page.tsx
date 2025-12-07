@@ -6,14 +6,39 @@ import { useDashboard } from '@/lib/hooks/useDashboard'
 import { formatRupiah, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils/helpers'
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 
 export default function AdminDashboard() {
   const { stats, monthlyData, recentBookings, upcomingDepartures, loading, error } = useDashboard()
   const [mounted, setMounted] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { user } = useUser()
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Filter bookings based on search
+  const filteredBookings = recentBookings.filter(booking => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      booking.nama_pelanggan?.toLowerCase().includes(query) ||
+      booking.nama_paket?.toLowerCase().includes(query) ||
+      booking.kode_booking?.toLowerCase().includes(query)
+    )
+  })
+
+  // Filter departures based on search
+  const filteredDepartures = upcomingDepartures.filter(departure => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      departure.nama_paket?.toLowerCase().includes(query) ||
+      departure.kode_jadwal?.toLowerCase().includes(query) ||
+      departure.nama_instansi?.toLowerCase().includes(query)
+    )
+  })
 
   if (loading) {
     return (
@@ -60,55 +85,61 @@ export default function AdminDashboard() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Cari..."
-                  className="w-64 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009966]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari booking atau keberangkatan..."
+                  className="w-80 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#009966] text-sm"
                 />
                 <svg className="w-5 h-5 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
-              {/* Notification */}
-              <button className="relative p-2.5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:bg-gray-50">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
-              </button>
-
-              {/* Settings */}
-              <button className="p-2.5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:bg-gray-50">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-
               {/* Profile */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg ring-2 ring-[#00bc7d]"></div>
+              <Link href="/admin/pengaturan" className="flex items-center gap-3 p-2 pr-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group">
+                {user?.imageUrl ? (
+                  <img 
+                    src={user.imageUrl} 
+                    alt={user.fullName || 'Admin'} 
+                    className="w-9 h-9 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold">
+                    {user?.firstName?.charAt(0) || 'A'}
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-[#101828] group-hover:text-[#009966] transition-colors">
+                    {user?.fullName || 'Admin'}
+                  </span>
+                  <span className="text-xs text-[#6a7282]">Administrator</span>
+                </div>
+              </Link>
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-4 gap-6">
             {/* Booking Bulan Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                    </svg>
-                    <span>Booking Bulan Ini</span>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.booking_bulan_ini || 0}</h2>
-                  <div className="flex items-center gap-2 text-sm text-[#6a7282]">
-                    <span>Total pemesanan</span>
-                  </div>
+                <div className="flex-1">
+                  <p className="text-xs text-[#6a7282] mb-2">Booking Bulan Ini</p>
+                  <h2 className="text-2xl font-bold text-[#101828] mb-1">{stats?.booking_bulan_ini || 0}</h2>
+                  <p className="text-xs text-[#6a7282]">Total pemesanan</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                     <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                   </svg>
@@ -117,23 +148,15 @@ export default function AdminDashboard() {
             </div>
 
             {/* Pendapatan Bulan Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                    </svg>
-                    <span>Pendapatan Bulan Ini</span>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{formatRupiah(stats?.pendapatan_bulan_ini || 0)}</h2>
-                  <div className="flex items-center gap-2 text-sm text-[#6a7282]">
-                    <span>Total terkonfirmasi</span>
-                  </div>
+                <div className="flex-1">
+                  <p className="text-xs text-[#6a7282] mb-2">Pendapatan Bulan Ini</p>
+                  <h2 className="text-2xl font-bold text-[#101828] mb-1">{formatRupiah(stats?.pendapatan_bulan_ini || 0)}</h2>
+                  <p className="text-xs text-[#6a7282]">Total terkonfirmasi</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                   </svg>
@@ -142,25 +165,15 @@ export default function AdminDashboard() {
             </div>
 
             {/* Menunggu Verifikasi */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    <span>Menunggu Verifikasi</span>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.menunggu_verifikasi || 0}</h2>
-                  <div className="flex items-center gap-2 text-sm text-[#e17100]">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Perlu perhatian</span>
-                  </div>
+                <div className="flex-1">
+                  <p className="text-xs text-[#6a7282] mb-2">Menunggu Verifikasi</p>
+                  <h2 className="text-2xl font-bold text-[#101828] mb-1">{stats?.menunggu_verifikasi || 0}</h2>
+                  <p className="text-xs text-[#e17100]">Perlu perhatian</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl shadow-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -168,20 +181,15 @@ export default function AdminDashboard() {
             </div>
 
             {/* Keberangkatan Minggu Ini */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[#6a7282] text-sm mb-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                    </svg>
-                    <span>Keberangkatan Minggu Ini</span>
-                  </div>
-                  <h2 className="text-3xl font-bold text-[#101828] mb-2">{stats?.keberangkatan_minggu_ini || 0}</h2>
-                  <p className="text-sm text-[#4a5565]">Sudah terjadwal</p>
+                <div className="flex-1">
+                  <p className="text-xs text-[#6a7282] mb-2">Keberangkatan Minggu Ini</p>
+                  <h2 className="text-2xl font-bold text-[#101828] mb-1">{stats?.keberangkatan_minggu_ini || 0}</h2>
+                  <p className="text-xs text-[#6a7282]">Sudah terjadwal</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-11 h-11 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                   </svg>
                 </div>
@@ -192,9 +200,9 @@ export default function AdminDashboard() {
           {/* Charts Section */}
           <div className="grid grid-cols-3 gap-6">
             {/* Trend Booking */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="col-span-2 bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-[#101828]">
+                <h3 className="text-lg font-semibold text-[#101828]">
                   Trend Booking & Pendapatan
                 </h3>
                 <div className="flex items-center gap-4 text-sm">
@@ -273,8 +281,8 @@ export default function AdminDashboard() {
             </div>
 
             {/* Status Pembayaran */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-              <h3 className="text-xl font-semibold text-[#101828] mb-6">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-[#101828] mb-6">
                 Status Pembayaran
               </h3>
               {mounted ? (
@@ -333,9 +341,9 @@ export default function AdminDashboard() {
           </div>
 
           {/* Paket Tour Terpopuler */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+          <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-[#101828]">
+              <h3 className="text-lg font-semibold text-[#101828]">
                 Paket Tour Terpopuler Bulan Ini
               </h3>
               <Link href="/admin/paket" className="text-sm text-[#009966] hover:underline">
@@ -371,9 +379,16 @@ export default function AdminDashboard() {
           {/* Bottom Section */}
           <div className="grid grid-cols-3 gap-6">
             {/* Booking Terbaru */}
-            <div className="col-span-2 bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="col-span-2 bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-[#101828]">Booking Terbaru</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#101828]">Booking Terbaru</h3>
+                  {searchQuery && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Menampilkan {filteredBookings.length} dari {recentBookings.length} booking
+                    </p>
+                  )}
+                </div>
                 <Link href="/admin/pemesanan" className="text-sm text-[#009966] hover:underline flex items-center gap-1">
                   Lihat Semua
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,17 +397,19 @@ export default function AdminDashboard() {
                 </Link>
               </div>
               <div className="space-y-3">
-                {recentBookings.length === 0 ? (
-                  <p className="text-center text-gray-400 py-8">Belum ada booking terbaru</p>
+                {filteredBookings.length === 0 ? (
+                  <p className="text-center text-gray-400 py-8">
+                    {searchQuery ? 'Tidak ada booking yang sesuai dengan pencarian' : 'Belum ada booking terbaru'}
+                  </p>
                 ) : (
-                  recentBookings.map((booking) => (
-                    <div key={booking.id} className="border border-gray-200 rounded-2xl p-4 flex items-center justify-between hover:border-[#009966] hover:shadow-md transition-all duration-300 cursor-pointer">
+                  filteredBookings.map((booking) => (
+                    <div key={booking.id} className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-[#009966] hover:shadow-sm transition-all duration-300 cursor-pointer">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                          booking.status === 'confirmed' ? 'bg-emerald-100' : 
-                          booking.status === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          booking.status === 'confirmed' ? 'bg-emerald-50' : 
+                          booking.status === 'pending' ? 'bg-yellow-50' : 'bg-gray-50'
                         }`}>
-                          <svg className={`w-6 h-6 ${
+                          <svg className={`w-5 h-5 ${
                             booking.status === 'confirmed' ? 'text-emerald-600' : 
                             booking.status === 'pending' ? 'text-yellow-600' : 'text-gray-600'
                           }`} fill="currentColor" viewBox="0 0 20 20">
@@ -422,11 +439,18 @@ export default function AdminDashboard() {
             </div>
 
             {/* Keberangkatan Terdekat */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-[#101828]">
-                  Keberangkatan Terdekat
-                </h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#101828]">
+                    Keberangkatan Terdekat
+                  </h3>
+                  {searchQuery && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Menampilkan {filteredDepartures.length} dari {upcomingDepartures.length} keberangkatan
+                    </p>
+                  )}
+                </div>
                 <Link href="/admin/penjadwalan" className="text-sm text-[#009966] hover:underline flex items-center gap-1">
                   Lihat Semua
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,14 +459,16 @@ export default function AdminDashboard() {
                 </Link>
               </div>
               <div className="space-y-4">
-                {upcomingDepartures.length === 0 ? (
-                  <p className="text-center text-gray-400 py-8">Belum ada keberangkatan mendatang</p>
+                {filteredDepartures.length === 0 ? (
+                  <p className="text-center text-gray-400 py-8">
+                    {searchQuery ? 'Tidak ada keberangkatan yang sesuai dengan pencarian' : 'Belum ada keberangkatan mendatang'}
+                  </p>
                 ) : (
-                  upcomingDepartures.map((departure) => (
-                    <div key={departure.id} className="border border-gray-200 rounded-2xl p-4 hover:border-[#009966] hover:shadow-md transition-all duration-300 cursor-pointer">
+                  filteredDepartures.map((departure) => (
+                    <div key={departure.id} className="border border-gray-200 rounded-xl p-4 hover:border-[#009966] hover:shadow-sm transition-all duration-300 cursor-pointer">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
+                          <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                           </svg>
                         </div>

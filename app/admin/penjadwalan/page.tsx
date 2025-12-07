@@ -164,6 +164,99 @@ export default function AdminPenjadwalanPage() {
     }
   }
 
+  const handleExportAllPDF = () => {
+    if (schedules.length === 0) {
+      alert('Tidak ada jadwal untuk diexport!')
+      return
+    }
+
+    // Create new PDF document
+    const doc = new jsPDF()
+
+    // Add title
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Laporan Semua Penjadwalan Tour', 14, 20)
+
+    // Add metadata
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const currentDate = new Date().toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    })
+    doc.text(`Tanggal Export: ${currentDate}`, 14, 28)
+    doc.text(`Total Jadwal: ${schedules.length}`, 14, 34)
+    doc.text(`Jadwal Aktif: ${jadwalAktif}`, 14, 40)
+    doc.text(`Jadwal Tidak Aktif: ${jadwalTidakAktif}`, 14, 46)
+
+    // Prepare table data - semua jadwal
+    const tableData = schedules.map((schedule, index) => [
+      index + 1,
+      schedule.nama_instansi || '-',
+      schedule.tour_packages.nama_paket,
+      schedule.kode_jadwal,
+      formatDate(schedule.tanggal_keberangkatan),
+      schedule.waktu_keberangkatan || '-',
+      schedule.status === 'aktif' ? 'Aktif' : schedule.status === 'selesai' ? 'Selesai' : 'Tidak Aktif'
+    ])
+
+    // Add table
+    autoTable(doc, {
+      startY: 52,
+      head: [['No', 'Instansi', 'Paket Tour', 'Kode', 'Tanggal', 'Waktu', 'Status']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [0, 153, 102],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center',
+        fontSize: 9
+      },
+      bodyStyles: {
+        textColor: [50, 50, 50],
+        fontSize: 8
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 25, halign: 'center' },
+        4: { cellWidth: 30, halign: 'center' },
+        5: { cellWidth: 20, halign: 'center' },
+        6: { cellWidth: 25, halign: 'center' }
+      },
+      margin: { top: 52, left: 14, right: 14 }
+    })
+
+    // Add footer with page numbers
+    const pageCount = (doc as any).internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text(
+        `Halaman ${i} dari ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      )
+      doc.text(
+        'PP Tour Travel - Sistem Manajemen Penjadwalan',
+        14,
+        doc.internal.pageSize.getHeight() - 10
+      )
+    }
+
+    // Save the PDF
+    doc.save(`Laporan-Semua-Penjadwalan-${new Date().toISOString().split('T')[0]}.pdf`)
+  }
+
   const handleExportPDF = () => {
     if (!selectedSchedule) {
       alert('Pilih jadwal untuk diexport!')
@@ -321,6 +414,16 @@ export default function AdminPenjadwalanPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 <span className="text-[#364153]">Export PDF</span>
+              </button>
+
+              <button 
+                onClick={handleExportAllPDF}
+                disabled={schedules.length === 0}
+                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#009966] to-[#00CC88] text-white rounded-[16.4px] shadow-sm hover:from-[#008855] hover:to-[#00BB77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Export Semua</span>
               </button>
               
               <button 
