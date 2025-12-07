@@ -68,8 +68,10 @@ export default function AdminPengaturanPage() {
           .eq('user_id', user.id)
           .single()
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error)
+        // Check for actual errors (not just "no rows")
+        // PGRST116 = no rows returned, which is OK for new profiles
+        if (error && error.code && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error.message || error)
           return
         }
 
@@ -362,17 +364,7 @@ export default function AdminPengaturanPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button 
-                        type="button"
-                        disabled
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-500 text-sm rounded-[10px] cursor-not-allowed">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Unggah Gambar
-                      </button>
                     </div>
-                    <p className="text-xs text-[#6a7282] text-center">Foto profil dikelola melalui akun Clerk Anda</p>
                   </div>
                 </div>
 

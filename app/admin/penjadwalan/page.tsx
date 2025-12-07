@@ -32,8 +32,8 @@ export default function AdminPenjadwalanPage() {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-    return `SCH${year}${month}${day}${random}`
+    const timestamp = Date.now().toString().slice(-6) // Last 6 digits of timestamp
+    return `SCH${year}${month}${day}${timestamp}`
   }
 
   const handleSelectSchedule = (id: string) => {
