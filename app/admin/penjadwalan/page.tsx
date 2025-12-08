@@ -13,6 +13,8 @@ export default function AdminPenjadwalanPage() {
   const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [formData, setFormData] = useState({
     package_id: '',
     status: 'aktif' as 'aktif' | 'tidak-aktif' | 'selesai',
@@ -52,9 +54,21 @@ export default function AdminPenjadwalanPage() {
     return matchesSearch
   })
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentSchedules = filteredSchedules.slice(startIndex, endIndex)
+
   const totalJadwal = schedules.length
   const jadwalAktif = schedules.filter(s => s.status === 'aktif').length
   const jadwalTidakAktif = schedules.filter(s => s.status === 'tidak-aktif').length
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1)
+  }
 
   const handleOpenModal = () => {
     setIsModalOpen(true)
@@ -492,7 +506,7 @@ export default function AdminPenjadwalanPage() {
                 type="text"
                 placeholder="Cari berdasarkan instansi, paket, atau kode..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-[16.4px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
               />
             </div>
@@ -516,7 +530,7 @@ export default function AdminPenjadwalanPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredSchedules.map((schedule) => (
+                  {currentSchedules.map((schedule) => (
                     <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-6">
                         <input
@@ -588,22 +602,37 @@ export default function AdminPenjadwalanPage() {
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
               <div className="text-[#4a5565]">
                 <span>Menampilkan </span>
-                <span className="font-semibold">1-{filteredSchedules.length}</span>
+                <span className="font-semibold">{startIndex + 1}-{Math.min(endIndex, filteredSchedules.length)}</span>
                 <span> dari </span>
                 <span className="font-semibold">{filteredSchedules.length}</span>
                 <span> jadwal</span>
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-3 py-2 bg-[#009966] text-white rounded-[10px] font-medium">
-                  1
-                </button>
-                <button className="px-3 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
-                  2
-                </button>
-                <button className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button 
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-[10px] font-medium transition-colors ${
+                      currentPage === page 
+                        ? 'bg-[#009966] text-white' 
+                        : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>

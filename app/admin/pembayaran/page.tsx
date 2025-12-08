@@ -14,6 +14,8 @@ export default function AdminPembayaranPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false)
   const [verificationNote, setVerificationNote] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   const handleSelectPayment = (id: string) => {
     if (selectedPayment === id) {
@@ -143,6 +145,23 @@ export default function AdminPembayaranPage() {
            bookingCode.includes(searchLower)
   })
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPayments = filteredPayments.slice(startIndex, endIndex)
+
+  // Reset to page 1 when search or tab changes
+  const handleTabChange = (tab: string) => {
+    setSelectedTab(tab)
+    setCurrentPage(1)
+  }
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1)
+  }
+
   const stats = {
     total: payments.length,
     verified: payments.filter(p => p.status === 'verified').length,
@@ -224,7 +243,7 @@ export default function AdminPembayaranPage() {
           <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-2">
             <div className="flex gap-2">
               <button
-                onClick={() => setSelectedTab('all')}
+                onClick={() => handleTabChange('all')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
                   selectedTab === 'all'
                     ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
@@ -244,7 +263,7 @@ export default function AdminPembayaranPage() {
               </button>
 
               <button
-                onClick={() => setSelectedTab('verified')}
+                onClick={() => handleTabChange('verified')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
                   selectedTab === 'verified'
                     ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
@@ -263,7 +282,7 @@ export default function AdminPembayaranPage() {
               </button>
 
               <button
-                onClick={() => setSelectedTab('pending')}
+                onClick={() => handleTabChange('pending')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
                   selectedTab === 'pending'
                     ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
@@ -282,7 +301,7 @@ export default function AdminPembayaranPage() {
               </button>
 
               <button
-                onClick={() => setSelectedTab('rejected')}
+                onClick={() => handleTabChange('rejected')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
                   selectedTab === 'rejected'
                     ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
@@ -371,7 +390,7 @@ export default function AdminPembayaranPage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Cari berdasarkan nama, perusahaan, atau kode booking..."
                 className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-[#009966] placeholder:text-gray-400"
               />
@@ -440,7 +459,7 @@ export default function AdminPembayaranPage() {
                         </div>
                       </td>
                     </tr>
-                  ) : filteredPayments.length > 0 ? filteredPayments.map((payment) => (
+                  ) : currentPayments.length > 0 ? currentPayments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-6">
                         <input
@@ -488,19 +507,34 @@ export default function AdminPembayaranPage() {
             {/* Pagination */}
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
               <p className="text-[#4a5565] text-base">
-                Menampilkan <span className="font-semibold">1-{filteredPayments.length}</span> dari <span className="font-semibold">{filteredPayments.length}</span> pembayaran
+                Menampilkan <span className="font-semibold">{startIndex + 1}-{Math.min(endIndex, filteredPayments.length)}</span> dari <span className="font-semibold">{filteredPayments.length}</span> pembayaran
               </p>
               <div className="flex gap-2">
-                <button className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-4 py-2 bg-[#009966] text-white rounded-lg">
-                  1
-                </button>
-                <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors">
-                  2
-                </button>
-                <button className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button 
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      currentPage === page 
+                        ? 'bg-[#009966] text-white' 
+                        : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>

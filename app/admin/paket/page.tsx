@@ -17,6 +17,8 @@ export default function AdminPaketPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('Semua Tipe')
   const [isUploading, setIsUploading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
   const [formData, setFormData] = useState({
     namaPaket: '',
     durasiIklan: '',
@@ -241,7 +243,10 @@ export default function AdminPaketPage() {
       const result = await deletePackage(selectedPackage.id)
       
       if (result.error) {
-        alert(`❌ Gagal menghapus paket: ${result.error}`)
+        // Show detailed error message
+        alert(`❌ ${result.error}`)
+        setIsDeleteModalOpen(false)
+        setSelectedPackage(null)
         return
       }
       
@@ -251,6 +256,8 @@ export default function AdminPaketPage() {
     } catch (err: any) {
       console.error('Error deleting package:', err)
       alert(`❌ Terjadi kesalahan: ${err.message}`)
+      setIsDeleteModalOpen(false)
+      setSelectedPackage(null)
     }
   }
 
@@ -266,6 +273,23 @@ export default function AdminPaketPage() {
     const matchesType = selectedType === 'Semua Tipe' || pkg.tipe_paket === selectedType
     return matchesSearch && matchesType
   })
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredPackages.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPackages = filteredPackages.slice(startIndex, endIndex)
+
+  // Reset to page 1 when search or type changes
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1)
+  }
+
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type)
+    setCurrentPage(1)
+  }
 
   const stats = {
     total: packages.length,
@@ -312,14 +336,14 @@ export default function AdminPaketPage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Cari paket tour berdasarkan nama atau destinasi..."
                   className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009966]"
                 />
               </div>
               <select 
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={(e) => handleTypeChange(e.target.value)}
                 className="border border-gray-200 rounded-2xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-[#009966]"
               >
                 <option>Semua Tipe</option>
@@ -421,8 +445,9 @@ export default function AdminPaketPage() {
 
           {/* Package Cards Grid */}
           {!loading && !error && (
+            <>
             <div className="grid grid-cols-3 gap-6">
-              {filteredPackages.length > 0 ? filteredPackages.map((pkg) => (
+              {currentPackages.length > 0 ? currentPackages.map((pkg) => (
               <div key={pkg.id} className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden">
                 {/* Package Image */}
                 <div className="relative h-48">
@@ -530,6 +555,45 @@ export default function AdminPaketPage() {
               </div>
             )}
             </div>
+
+            {/* Pagination */}
+            {filteredPackages.length > 0 && (
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-md px-6 py-4 flex items-center justify-between">
+                <p className="text-[#4a5565] text-base">
+                  Menampilkan <span className="font-semibold">{startIndex + 1}-{Math.min(endIndex, filteredPackages.length)}</span> dari <span className="font-semibold">{filteredPackages.length}</span> paket
+                </p>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button 
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentPage === page 
+                          ? 'bg-[#009966] text-white' 
+                          : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
