@@ -149,6 +149,23 @@ export function usePayments(statusFilter?: string) {
     }
   }
 
+  const deletePayment = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      
+      await fetchPayments()
+      return { error: null }
+    } catch (err: any) {
+      console.error('Error deleting payment:', err)
+      return { error: err.message }
+    }
+  }
+
   return {
     payments,
     loading,
@@ -156,6 +173,7 @@ export function usePayments(statusFilter?: string) {
     refetch: fetchPayments,
     createPayment,
     verifyPayment,
-    rejectPayment
+    rejectPayment,
+    deletePayment
   }
 }

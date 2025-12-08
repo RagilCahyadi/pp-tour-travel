@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function AdminPembayaranPage() {
   const [selectedTab, setSelectedTab] = useState('all')
-  const { payments, loading, error, verifyPayment, rejectPayment, refetch } = usePayments(selectedTab === 'all' ? undefined : selectedTab)
+  const { payments, loading, error, verifyPayment, rejectPayment, deletePayment, refetch } = usePayments(selectedTab === 'all' ? undefined : selectedTab)
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -110,10 +110,24 @@ export default function AdminPembayaranPage() {
     }
   }
 
-  const handleConfirmDelete = () => {
-    // TODO: Implement delete logic with Supabase
-    alert('⚠️ Fitur hapus pembayaran akan segera ditambahkan')
-    setIsDeleteModalOpen(false)
+  const handleConfirmDelete = async () => {
+    if (!selectedPayment) return
+    
+    try {
+      const result = await deletePayment(selectedPayment)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      setIsDeleteModalOpen(false)
+      setSelectedPayment(null)
+      
+      alert('✅ Pembayaran berhasil dihapus!')
+    } catch (err: any) {
+      console.error('Error deleting payment:', err)
+      alert(`❌ Gagal menghapus pembayaran:\n${err.message || err}`)
+    }
   }
 
   const filteredPayments = payments.filter(payment => {
