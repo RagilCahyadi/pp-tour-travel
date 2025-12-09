@@ -3,8 +3,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useUser } from '@clerk/nextjs';
+import AuthenticatedNavbar from "@/components/ui/AuthenticatedNavbar";
 
 export default function LandingNavbar() {
+  const { isSignedIn } = useUser();
+
+  // If user is authenticated, show AuthenticatedNavbar
+  if (isSignedIn) {
+    return <AuthenticatedNavbar />;
+  }
+
+  // Otherwise, show the public navbar
   return (
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
@@ -36,12 +46,6 @@ export default function LandingNavbar() {
             className="text-sm text-gray-600 hover:text-gray-900"
           >
             Paket Tour
-          </Link>
-          <Link
-            href="/riwayat-pesanan"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            Riwayat Pesanan
           </Link>
           <button
             type="button"
