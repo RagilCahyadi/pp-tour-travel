@@ -136,9 +136,9 @@ export default function AdminPemesananPage() {
 
   if (loading) {
     return (
-      <div className="bg-white relative min-h-screen flex">
+      <div className="bg-white relative min-h-screen">
         <AdminSidebar activePage="pemesanan" />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="ml-64 min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966] mx-auto"></div>
             <p className="mt-4 text-gray-600">Memuat data pemesanan...</p>
@@ -150,9 +150,9 @@ export default function AdminPemesananPage() {
 
   if (error) {
     return (
-      <div className="bg-white relative min-h-screen flex">
+      <div className="bg-white relative min-h-screen">
         <AdminSidebar activePage="pemesanan" />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="ml-64 min-h-screen flex items-center justify-center">
           <div className="text-center max-w-2xl p-8">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <svg className="w-12 h-12 text-red-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,12 +246,12 @@ export default function AdminPemesananPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar activePage="pemesanan" />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="ml-64 min-h-screen">
         <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
           <div className="flex items-center justify-between">

@@ -86,9 +86,9 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
   ]
 
   return (
-    <div className="w-64 bg-gradient-to-b from-[#009966] via-[#007a55] to-[#006045] shadow-2xl flex flex-col">
+    <div className="w-64 bg-gradient-to-b from-[#009966] via-[#007a55] to-[#006045] shadow-2xl flex flex-col fixed top-0 left-0 h-screen overflow-y-auto">
       {/* Logo Section */}
-      <div className="border-b border-[rgba(0,188,125,0.3)] p-6">
+      <div className="border-b border-[rgba(0,188,125,0.3)] p-6 flex-shrink-0">
         <div className="bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-2xl p-4">
           <div className="flex items-center justify-center mb-2">
             <div className="relative w-24 h-24">
@@ -111,7 +111,7 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <Link
             key={item.id}
@@ -129,7 +129,7 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
       </nav>
 
       {/* Logout Button */}
-      <div className="border-t border-[rgba(0,188,125,0.3)] p-4">
+      <div className="border-t border-[rgba(0,188,125,0.3)] p-4 flex-shrink-0">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-3 text-emerald-50 rounded-2xl hover:bg-[rgba(255,255,255,0.1)] transition-colors w-full"
