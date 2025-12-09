@@ -62,12 +62,12 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="bg-white relative min-h-screen flex">
+    <div className="bg-white relative min-h-screen">
       {/* Sidebar */}
       <AdminSidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto">
+      <div className="ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto">
         <div className="p-8 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">

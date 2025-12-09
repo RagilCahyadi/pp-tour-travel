@@ -309,12 +309,12 @@ export default function AdminPengaturanPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar activePage="pengaturan" />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="ml-64 min-h-screen overflow-auto">
         <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
           <div>
