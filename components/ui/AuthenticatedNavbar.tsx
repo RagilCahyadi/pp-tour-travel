@@ -124,12 +124,24 @@ export default function AuthenticatedNavbar() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-[10px] px-[12px] h-[48px] rounded-[10px] hover:bg-gray-50 transition-colors"
           >
-            {/* User Avatar with Initials */}
-            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#00bc7d] to-[#00a06f] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center">
-              <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-white">
-                {getUserInitials()}
-              </span>
-            </div>
+            {/* User Avatar with Image or Initials */}
+            {user?.imageUrl ? (
+              <div className="w-[32px] h-[32px] rounded-full overflow-hidden shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
+                <Image
+                  src={user.imageUrl}
+                  alt="Profile"
+                  width={32}
+                  height={32}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            ) : (
+              <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#00bc7d] to-[#00a06f] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center">
+                <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-white">
+                  {getUserInitials()}
+                </span>
+              </div>
+            )}
 
             {/* User Name */}
             <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#364153]">

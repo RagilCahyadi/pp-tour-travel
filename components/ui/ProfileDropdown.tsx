@@ -41,11 +41,23 @@ export default function ProfileDropdown({ user, isAdmin, onClose }: ProfileDropd
       <div className="border-b border-gray-100 px-[16px] pt-[12px] pb-[1px]">
         {/* User Avatar and Name */}
         <div className="flex items-center gap-[12px] mb-[8px]">
-          <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#00bc7d] to-[#00a06f] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center shrink-0">
-            <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-white text-center">
-              {getUserInitials()}
-            </span>
-          </div>
+          {user?.imageUrl ? (
+            <div className="w-[32px] h-[32px] rounded-full overflow-hidden shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] shrink-0">
+              <Image
+                src={user.imageUrl}
+                alt="Profile"
+                width={32}
+                height={32}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ) : (
+            <div className="w-[32px] h-[32px] rounded-full bg-gradient-to-br from-[#00bc7d] to-[#00a06f] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center shrink-0">
+              <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-white text-center">
+                {getUserInitials()}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* User Name */}
@@ -82,22 +94,6 @@ export default function ProfileDropdown({ user, isAdmin, onClose }: ProfileDropd
           </span>
         </Link>
 
-        {/* Pengaturan */}
-        <Link
-          href="/pengaturan"
-          onClick={onClose}
-          className="flex items-center gap-[12px] h-[36px] px-[16px] hover:bg-gray-50 transition-colors"
-        >
-          <Image
-            src="/images/settings-icon.svg"
-            alt="Settings"
-            width={16}
-            height={16}
-          />
-          <span className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#364153]">
-            Pengaturan
-          </span>
-        </Link>
 
         {/* Admin Dashboard (Only for Admin) */}
         {isAdmin && (
