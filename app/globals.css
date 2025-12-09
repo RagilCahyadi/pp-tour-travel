@@ -122,3 +122,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom animations for Top Destinations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Bounce with delay */
+.delay-150 {
+  animation-delay: 150ms;
+}

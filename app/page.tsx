@@ -1,6 +1,6 @@
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import HeroSection from "@/components/landing/HeroSection";
-import TopDestinationsSection from "@/components/landing/TopDestinationsSection";
+import TopDestinationsRanking from "@/components/landing/TopDestinationsRanking";
 import WhyChooseUsSection from "@/components/landing/WhyChooseUsSection";
 import HowToOrderSection from "@/components/landing/HowToOrderSection";
 import ServicesSection from "@/components/landing/ServicesSection";
@@ -17,8 +17,8 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Top Destinations Section */}
-      <TopDestinationsSection />
+      {/* Top 3 Destinations Ranking (Supabase Integrated) */}
+      <TopDestinationsRanking />
 
       {/* Why Choose Us Section */}
       <WhyChooseUsSection />

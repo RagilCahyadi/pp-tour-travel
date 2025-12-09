@@ -14,7 +14,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 relative rounded-lg overflow-hidden">
                 <Image
-                  src="/images/landing/logo.png"
+                  src="/images/landing/Logo_Transparent_White.png"
                   alt="Explore Travel Logo"
                   fill
                   className="object-cover"
