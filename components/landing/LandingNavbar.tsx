@@ -43,12 +43,18 @@ export default function LandingNavbar() {
           >
             Riwayat Pesanan
           </Link>
-          <Link
-            href="/tentang-kami"
-            className="text-sm text-gray-600 hover:text-gray-900"
+          <button
+            type="button"
+            className="text-sm text-gray-600 hover:text-gray-900 focus:outline-none"
+            onClick={() => {
+              const el = document.getElementById('about-us');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             Tentang Kami
-          </Link>
+          </button>
         </div>
 
         {/* Auth Buttons */}

@@ -68,18 +68,7 @@ export default function TopDestinationsRanking() {
           
           {/* Stats badges */}
           <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md border border-emerald-100">
-              <Users className="w-4 h-4 text-emerald-600" />
-              <span className="text-sm font-semibold text-gray-700">3000+ Wisatawan</span>
-            </div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md border border-yellow-100">
-              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span className="text-sm font-semibold text-gray-700">Rating 4.8+</span>
-            </div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md border border-blue-100">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-semibold text-gray-700">Trending 2025</span>
-            </div>
+          
           </div>
         </div>
 
