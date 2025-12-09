@@ -46,68 +46,7 @@ export default function HeroSection() {
         <div className="absolute bottom-[15%] right-[20%] w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      {/* Floating Elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Top Right Cards */}
-        <div 
-          className="absolute top-[15%] right-[8%] animate-float"
-          style={{ animationDelay: '0s' }}
-        >
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-white/90 text-xs">Destinasi</p>
-                <p className="text-white font-bold text-lg">50+</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div 
-          className="absolute top-[45%] right-[5%] animate-float"
-          style={{ animationDelay: '1s' }}
-        >
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-white/90 text-xs">Pelanggan Puas</p>
-                <p className="text-white font-bold text-lg">500+</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div 
-          className="absolute top-[70%] right-[12%] animate-float"
-          style={{ animationDelay: '2s' }}
-        >
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-white/90 text-xs">Rating</p>
-                <p className="text-white font-bold text-lg">4.9★</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Small Floating Icons */}
-        <div className="absolute top-[25%] right-[25%] animate-float-slow">
-          <Plane className="w-8 h-8 text-white/20 rotate-45" />
-        </div>
-        <div className="absolute top-[55%] right-[30%] animate-float-slow" style={{ animationDelay: '1.5s' }}>
-          <Sparkles className="w-6 h-6 text-emerald-400/30" />
-        </div>
-      </div>
 
       {/* Content */}
       <div className="relative h-full flex items-center">
