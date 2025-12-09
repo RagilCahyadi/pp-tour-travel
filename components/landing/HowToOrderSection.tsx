@@ -2,7 +2,6 @@
 
 import { Search, FileText, CreditCard, Plane, CheckCircle2, ArrowRight, Phone } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function HowToOrderSection() {
   const steps = [
@@ -10,38 +9,48 @@ export default function HowToOrderSection() {
       number: "01",
       icon: <Search className="w-12 h-12" />,
       title: "Pilih Paket Tour",
-      description: "Jelajahi berbagai paket tour kami dan pilih destinasi yang sesuai dengan impian Anda"
+      description: "Jelajahi berbagai paket tour kami dan pilih destinasi yang sesuai dengan impian Anda",
+      badgeColor: "bg-emerald-500",
+      iconBg: "bg-emerald-100",
+      glowColor: "bg-emerald-200/30"
     },
     {
       number: "02",
       icon: <FileText className="w-12 h-12" />,
       title: "Isi Form Pemesanan",
-      description: "Lengkapi data diri dan informasi perjalanan dengan mudah melalui form online kami"
+      description: "Lengkapi data diri dan informasi perjalanan dengan mudah melalui form online kami",
+      badgeColor: "bg-blue-500",
+      iconBg: "bg-blue-100",
+      glowColor: "bg-blue-200/30"
     },
     {
       number: "03",
       icon: <CreditCard className="w-12 h-12" />,
       title: "Lakukan Pembayaran",
-      description: "Transfer pembayaran dan upload bukti transfer langsung di website untuk verifikasi cepat"
+      description: "Transfer pembayaran dan upload bukti transfer langsung di website untuk verifikasi cepat",
+      badgeColor: "bg-purple-500",
+      iconBg: "bg-purple-100",
+      glowColor: "bg-purple-200/30"
     },
     {
       number: "04",
       icon: <Plane className="w-12 h-12" />,
       title: "Siap Berangkat!",
-      description: "Setelah pembayaran dikonfirmasi, Anda siap untuk memulai petualangan yang tak terlupakan"
+      description: "Setelah pembayaran dikonfirmasi, Anda siap untuk memulai petualangan yang tak terlupakan",
+      badgeColor: "bg-orange-500",
+      iconBg: "bg-orange-100",
+      glowColor: "bg-orange-200/30"
     }
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-block bg-emerald-50 px-4 py-2 rounded-full mb-6">
-            <span className="text-emerald-700 text-sm font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              Mudah & Cepat
-            </span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-emerald-100 rounded-full">
+            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+            <span className="text-emerald-700 text-sm font-medium">Mudah & Cepat</span>
           </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Cara Pemesanan
@@ -51,42 +60,53 @@ export default function HowToOrderSection() {
           </p>
         </div>
 
-        {/* Progress Line */}
+        {/* Steps Container */}
         <div className="relative mb-16">
-          <div className="absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-emerald-200 via-purple-200 to-yellow-200"></div>
+          {/* Progress Line */}
+          <div className="absolute top-[98px] left-0 right-0 h-1 bg-gradient-to-r from-emerald-200 via-blue-200 via-purple-200 to-orange-200 z-0"></div>
           
-          {/* Steps */}
-          <div className="grid md:grid-cols-4 gap-6 relative">
+          {/* Steps Grid */}
+          <div className="grid md:grid-cols-4 gap-6 relative z-10">
             {steps.map((step, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-lg p-8 h-full">
+              <div key={index} className="relative group">
+                <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-lg p-8 h-full transition-all duration-300 hover:shadow-xl hover:border-gray-200">
                   {/* Step Number Badge */}
-                  <div className="absolute -top-4 -left-4 w-16 h-16 bg-gradient-to-r from-[#00bc7d] to-[#009966] rounded-2xl shadow-lg flex items-center justify-center">
+                  <div className={`absolute -top-4 -left-4 w-16 h-16 ${step.badgeColor} rounded-2xl shadow-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                     <span className="text-white font-semibold text-lg">{step.number}</span>
                   </div>
 
-                  {/* Icon with decorative elements */}
-                  <div className="mb-6 mt-4 relative">
-                    <div className="absolute -inset-3 bg-gradient-to-br from-emerald-100/30 to-emerald-50/30 rounded-3xl blur-md"></div>
-                    <div className="relative w-24 h-24 mx-auto bg-white rounded-3xl shadow-xl flex items-center justify-center text-emerald-600">
-                      {step.icon}
+                  {/* Icon with animated blur effects */}
+                  <div className="mb-6 mt-4 relative flex justify-center">
+                    {/* Outer blur - largest */}
+                    <div className={`absolute w-[110px] h-[110px] ${step.glowColor} rounded-3xl blur-xl opacity-30 transition-all duration-500 group-hover:opacity-50`}></div>
+                    
+                    {/* Middle blur */}
+                    <div className={`absolute w-[105px] h-[105px] ${step.glowColor} rounded-3xl blur-md opacity-20 transition-all duration-500 group-hover:opacity-40`}></div>
+                    
+                    {/* Icon Container */}
+                    <div className={`relative w-24 h-24 ${step.iconBg} rounded-3xl shadow-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
+                      <div className={`absolute inset-0 ${step.iconBg} rounded-3xl opacity-10`}></div>
+                      <div className="relative text-gray-700">
+                        {step.icon}
+                      </div>
                     </div>
+                    
                     {/* Decorative dots */}
-                    <div className="absolute -top-2 -right-2 w-3 h-3 bg-emerald-400/60 rounded-full"></div>
-                    <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-emerald-300/60 rounded-full"></div>
+                    <div className={`absolute top-0 right-6 w-3 h-3 ${step.glowColor} rounded-full opacity-60 transition-all duration-300 group-hover:scale-125`}></div>
+                    <div className={`absolute bottom-0 left-6 w-2 h-2 ${step.glowColor} rounded-full opacity-60 transition-all duration-300 group-hover:scale-125`}></div>
                   </div>
 
                   <h3 className="text-xl font-semibold text-gray-900 text-center mb-3">
                     {step.title}
                   </h3>
-                  <p className="text-gray-600 text-center leading-relaxed">
+                  <p className="text-gray-600 text-center leading-relaxed text-sm">
                     {step.description}
                   </p>
 
                   {/* Arrow indicator (except last item) */}
                   {index < steps.length - 1 && (
-                    <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                    <div className="hidden md:flex absolute -right-3 top-[180px] z-20 items-center justify-center">
+                      <ArrowRight className="w-6 h-6 text-gray-300" />
                     </div>
                   )}
                 </div>
@@ -117,25 +137,17 @@ export default function HowToOrderSection() {
                 Jangan tunda lagi! Pilih paket tour impian Anda dan buat kenangan tak terlupakan bersama kami
               </p>
 
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link href="/paket-tour">
-                  <Button
-                    size="lg"
-                    className="bg-white hover:bg-gray-50 text-[#009966] px-8 h-16 text-lg rounded-2xl shadow-xl font-medium"
-                  >
+                  <button className="inline-flex items-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-[#009966] text-lg rounded-2xl shadow-xl font-medium transition-all duration-300 hover:scale-105">
                     Lihat Paket Tour
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
                 </Link>
                 <Link href="/contact">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="bg-[#007a55] hover:bg-[#006644] border-2 border-emerald-300 text-white px-8 h-16 text-lg rounded-2xl shadow-xl font-medium"
-                  >
-                    <Phone className="mr-2 w-5 h-5" />
+                  <button className="inline-flex items-center gap-2 px-8 py-4 bg-[#007a55] hover:bg-[#006644] border-2 border-emerald-300 text-white text-lg rounded-2xl shadow-xl font-medium transition-all duration-300 hover:scale-105">
                     Hubungi Kami
-                  </Button>
+                  </button>
                 </Link>
               </div>
             </div>

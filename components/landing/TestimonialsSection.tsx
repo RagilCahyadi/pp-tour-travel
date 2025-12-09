@@ -1,9 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Star, Quote, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function TestimonialsSection() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
   const testimonials = [
     {
       name: "Andi Pratama",
@@ -35,15 +39,54 @@ export default function TestimonialsSection() {
     }
   ];
 
+  // Auto-slide functionality
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, testimonials.length]);
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10s
+  };
+
+  const goToPrevious = () => {
+    const newIndex = currentIndex === 0 ? testimonials.length - 1 : currentIndex - 1;
+    goToSlide(newIndex);
+  };
+
+  const goToNext = () => {
+    const newIndex = (currentIndex + 1) % testimonials.length;
+    goToSlide(newIndex);
+  };
+
+  // Get visible testimonials (current + 2 next)
+  const getVisibleTestimonials = () => {
+    const visible = [];
+    for (let i = 0; i < 3; i++) {
+      const index = (currentIndex + i) % testimonials.length;
+      visible.push({ ...testimonials[index], originalIndex: index });
+    }
+    return visible;
+  };
+
+  const visibleTestimonials = getVisibleTestimonials();
+
   return (
-    <section className="relative py-20 overflow-hidden bg-white">
+    <section className="relative py-12 overflow-hidden bg-white">
       {/* Background Decorations */}
       <div className="absolute top-20 right-10 w-96 h-96 bg-emerald-100/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
 
       <div className="relative max-w-7xl mx-auto px-8">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <div className="inline-block bg-gradient-to-r from-emerald-50 to-blue-50 px-4 py-2 rounded-full mb-6">
             <span className="text-emerald-700 text-sm font-medium flex items-center gap-2">
               <Quote className="w-4 h-4" />
@@ -62,11 +105,11 @@ export default function TestimonialsSection() {
         <div className="relative">
           {/* Testimonials Grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {testimonials.map((testimonial, index) => (
+            {visibleTestimonials.map((testimonial, index) => (
               <div
-                key={index}
-                className={`bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all ${
-                  testimonial.featured ? "md:scale-105 border-emerald-200" : ""
+                key={`${testimonial.originalIndex}-${index}`}
+                className={`bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 animate-fadeIn ${
+                  index === 1 ? "md:scale-105 border-emerald-200" : ""
                 }`}
               >
                 {/* Quote Icon */}
@@ -118,19 +161,33 @@ export default function TestimonialsSection() {
 
           {/* Navigation Dots */}
           <div className="flex items-center justify-center gap-2 mb-12">
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <div className="w-8 h-2 rounded-full bg-[#009966]"></div>
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`transition-all duration-300 rounded-full ${
+                  index === currentIndex
+                    ? "w-8 h-2 bg-[#009966]"
+                    : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
 
           {/* Navigation Buttons */}
-          <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-13 h-13 bg-white border-2 border-emerald-200 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center">
+          <button
+            onClick={goToPrevious}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-12 h-12 bg-white border-2 border-emerald-200 rounded-full shadow-lg hover:shadow-xl hover:bg-emerald-50 transition-all flex items-center justify-center"
+            aria-label="Previous testimonial"
+          >
             <ChevronLeft className="w-6 h-6 text-emerald-600" />
           </button>
-          <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-13 h-13 bg-white border-2 border-emerald-200 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center">
+          <button
+            onClick={goToNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-12 h-12 bg-white border-2 border-emerald-200 rounded-full shadow-lg hover:shadow-xl hover:bg-emerald-50 transition-all flex items-center justify-center"
+            aria-label="Next testimonial"
+          >
             <ChevronRight className="w-6 h-6 text-emerald-600" />
           </button>
         </div>

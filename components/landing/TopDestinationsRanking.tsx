@@ -14,11 +14,11 @@ export default function TopDestinationsRanking() {
       <section className="relative w-full py-12 px-8 bg-gradient-to-br from-emerald-50/30 via-white to-yellow-50/30">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl shadow-lg mb-4 animate-pulse">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl shadow-lg mb-4">
               <Award className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
-              🏆 Top 3 Destinasi Terfavorit
+              Top 3 Destinasi Terfavorit
             </h2>
             <p className="text-gray-600 text-base">
               Destinasi pilihan wisatawan yang paling banyak dikunjungi dan mendapat rating tertinggi
@@ -52,15 +52,11 @@ export default function TopDestinationsRanking() {
       <div className="relative max-w-[1280px] mx-auto">
         {/* Header with decorative elements */}
         <div className="text-center mb-10 relative">
-          {/* Decorative stars */}
-          <div className="absolute -top-4 left-1/4 text-yellow-400 text-2xl animate-bounce">⭐</div>
-          <div className="absolute -top-2 right-1/4 text-yellow-400 text-xl animate-bounce delay-150">✨</div>
-          
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl shadow-lg mb-4 animate-pulse">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl shadow-lg mb-4">
             <Award className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
-            🏆 Top 3 Destinasi Terfavorit
+            Top 3 Destinasi Terfavorit
           </h2>
           <p className="text-gray-600 text-base max-w-2xl mx-auto mb-4">
             Destinasi pilihan wisatawan yang paling banyak dikunjungi dan mendapat rating tertinggi
@@ -141,22 +137,14 @@ function DestinationCard({ destination, isMain = false }: DestinationCardProps) 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         
-        {/* Animated sparkles for main destination */}
-        {isMain && (
-          <>
-            <div className="absolute top-8 left-20 text-yellow-400 text-lg animate-pulse">✨</div>
-            <div className="absolute top-16 right-24 text-yellow-400 text-sm animate-bounce">⭐</div>
-          </>
-        )}
-
-        {/* Rank Badge with animation */}
+        {/* Rank Badge */}
         <div className="absolute top-4 left-4 flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg hover:scale-110 transition-transform">
-          <span className="text-2xl animate-bounce">{destination.rankEmoji}</span>
+          <span className="text-2xl">{destination.rankEmoji}</span>
           <span className="text-sm font-bold text-gray-900">{destination.rankLabel}</span>
         </div>
 
-        {/* Growth Badge with pulse effect */}
-        <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-500/90 backdrop-blur-sm px-3 py-1.5 rounded-lg animate-pulse">
+        {/* Growth Badge */}
+        <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-500/90 backdrop-blur-sm px-3 py-1.5 rounded-lg">
           <TrendingUp className="w-4 h-4 text-white" />
           <span className="text-sm font-medium text-white">+{destination.growthPercentage}%</span>
         </div>

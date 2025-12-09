@@ -6,7 +6,7 @@ import { Award, Users, Globe, Heart, Shield, Briefcase, Star, DollarSign } from 
 
 export default function AboutUsSection() {
   return (
-    <section id="about-us" className="relative w-full py-12 bg-white overflow-hidden">
+    <section id="about-us" className="relative w-full py-12 pb-6 bg-white overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-8">
         {/* Header */}
         <div className="text-center mb-16">
