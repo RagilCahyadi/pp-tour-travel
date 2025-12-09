@@ -370,22 +370,22 @@ export default function AdminPengaturanPage() {
 
                 {/* Time & Language */}
                 <div className="border-t border-gray-200 pt-6">
-                  <h3 className="text-xl font-semibold text-[#364153] mb-4">Waktu dan Bahasa</h3>
+                  <h3 className="text-xl font-semibold text-[#364153] mb-4"></h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs text-[#6a7282] mb-2">Pilih Bahasa</label>
-                      <select
+                      <label className="block text-xs text-[#6a7282] mb-2"></label>
+                      {/* <select
                         name="bahasa"
                         value={profileData.bahasa}
                         onChange={handleProfileChange}
                         className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-[10px] text-sm focus:outline-none focus:ring-2 focus:ring-[#009966]">
                         <option value="id">Bahasa Indonesia</option>
                         <option value="en">English</option>
-                      </select>
+                      </select> */}
                     </div>
                     <div>
-                      <label className="block text-xs text-[#6a7282] mb-2">Zona Waktu</label>
-                      <select
+                      <label className="block text-xs text-[#6a7282] mb-2"></label>
+                      {/* <select
                         name="zonaWaktu"
                         value={profileData.zonaWaktu}
                         onChange={handleProfileChange}
@@ -393,7 +393,7 @@ export default function AdminPengaturanPage() {
                         <option value="GMT+7">GMT +7:00 (Jakarta)</option>
                         <option value="GMT+8">GMT +8:00 (Bali)</option>
                         <option value="GMT+9">GMT +9:00 (Jayapura)</option>
-                      </select>
+                      </select> */}
                     </div>
                   </div>
                 </div>

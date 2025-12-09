@@ -23,7 +23,7 @@ export default function AboutUsSection() {
 
           {/* Description */}
           <p className="text-gray-600 text-lg">
-            Partner terpercaya untuk mewujudkan petualangan impian Anda sejak 2015
+            Partner terpercaya untuk mewujudkan petualangan impian Anda sejak 2022
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default function AboutUsSection() {
                     <Award className="w-8 h-8 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">10+ Tahun</p>
+                    <p className="text-2xl font-bold text-gray-900">3+ Tahun</p>
                     <p className="text-sm text-gray-600">Pengalaman Terbaik</p>
                   </div>
                 </div>
@@ -66,7 +66,7 @@ export default function AboutUsSection() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">Cerita Kami</h3>
               <div className="space-y-4">
                 <p className="text-gray-600 leading-relaxed">
-                  Dengan pengalaman lebih dari 10 tahun, kami telah melayani ribuan pelanggan dari berbagai kalangan. Dari wisata keluarga, study tour sekolah, hingga corporate gathering, kami siap memberikan pengalaman terbaik untuk setiap momen spesial Anda.
+                  Dengan pengalaman lebih dari 3 tahun, kami telah melayani ribuan pelanggan dari berbagai kalangan. Dari wisata keluarga, study tour sekolah, hingga corporate gathering, kami siap memberikan pengalaman terbaik untuk setiap momen spesial Anda.
                 </p>
                 <p className="text-gray-600 leading-relaxed">
                   Tim profesional kami yang berpengalaman akan memastikan setiap detail perjalanan Anda berjalan sempurna, mulai dari perencanaan hingga Anda kembali dengan senyum dan cerita indah.
@@ -111,7 +111,7 @@ export default function AboutUsSection() {
                     <Award className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">10+</p>
+                    <p className="text-2xl font-bold text-gray-900">3+</p>
                     <p className="text-xs text-gray-600">Tahun Berpengalaman</p>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export default function AboutUsSection() {
               <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mx-auto mb-4">
                 <Award className="w-8 h-8 text-white" />
               </div>
-              <p className="text-4xl font-bold text-white mb-2">10+</p>
+              <p className="text-4xl font-bold text-white mb-2">3+</p>
               <p className="text-sm text-emerald-100">Tahun Berpengalaman</p>
             </div>
 

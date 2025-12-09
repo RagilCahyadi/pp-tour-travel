@@ -109,12 +109,19 @@ export default function AuthenticatedNavbar() {
               Riwayat Pesanan
             </Link>
           )}
-          <Link 
-            href="/tentang-kami"
+          <button
+            type="button"
             className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
+            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+            onClick={() => {
+              const el = document.getElementById('about-us');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             Tentang Kami
-          </Link>
+          </button>
         </div>
 
         {/* User Actions */}
