@@ -631,7 +631,7 @@ export default function AdminPaketPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm text-[#364153]">Durasi Iklan</label>
+                  <label className="block text-sm text-[#364153]">Durasi Wisata</label>
                   <input
                     type="text"
                     name="durasiIklan"
@@ -665,7 +665,7 @@ export default function AdminPaketPage() {
                     name="nominalHarga"
                     value={formData.nominalHarga}
                     onChange={handleInputChange}
-                    placeholder="Berapa hari"
+                    placeholder="Berapa Nominal Harga"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#009966] placeholder:text-gray-400"
                   />
                 </div>
@@ -781,7 +781,7 @@ export default function AdminPaketPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm text-[#364153]">Durasi Iklan</label>
+                  <label className="block text-sm text-[#364153]">Durasi Wisata</label>
                   <input
                     type="text"
                     name="durasiIklan"
@@ -849,7 +849,7 @@ export default function AdminPaketPage() {
 
               {/* Upload Gambar */}
               <div className="space-y-2">
-                <label className="block text-sm text-[#364153]">Upload Gambar Paket</label>
+                <label className="block text-sm text-[#364153]">Upload Brosur Poster</label>
                 <div className="relative">
                   <input
                     type="text"
