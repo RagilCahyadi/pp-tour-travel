@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useUser } from '@clerk/nextjs';
 import AuthenticatedNavbar from "@/components/ui/AuthenticatedNavbar";
 
 export default function LandingNavbar() {
   const { isSignedIn } = useUser();
+  const pathname = usePathname();
 
   // If user is authenticated, show AuthenticatedNavbar
   if (isSignedIn) {
@@ -37,13 +39,22 @@ export default function LandingNavbar() {
         <div className="hidden md:flex items-center gap-8">
           <Link
             href="/"
-            className="text-sm font-medium text-gray-900 border-b-2 border-[#00bc7d] pb-1"
+            className={`relative text-sm pb-1 transition-colors duration-200
+              ${pathname === '/' 
+                ? 'font-semibold text-gray-900 after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-[4px] after:rounded-full after:bg-[#00bc7d]'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
           >
             Beranda
           </Link>
           <Link
             href="/paket-tour"
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className={`relative text-sm pb-1 transition-colors duration-200
+              ${pathname.startsWith('/paket-tour')
+                ? 'font-semibold text-gray-900 after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-1 after:h-[4px] after:rounded-full after:bg-[#00bc7d]'
+                : 'text-gray-600 hover:text-gray-900'
+              }`
+            }
           >
             Paket Tour
           </Link>
