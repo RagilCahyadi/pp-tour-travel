@@ -50,7 +50,7 @@ export function TicketCard({
   return (
     <div 
       className={cn(
-        "bg-white border border-muted rounded-3xl shadow-lg overflow-hidden w-full max-w-[592px] h-[815px] flex flex-col",
+        "bg-white border border-muted rounded-3xl shadow-lg overflow-hidden w-full max-w-[592px] h-[905px] flex flex-col",
         className
       )}
       {...props}

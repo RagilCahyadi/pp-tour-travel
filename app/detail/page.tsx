@@ -9,6 +9,7 @@ import Footer from "@/components/landing/Footer"
 const PACKAGE_DATA = {
   title: "Paket Ekonomis Bali",
   price: "Rp 1.100.000",
+  rawPrice: 1100000,
   minPax: 50,
   location: "Bali",
   duration: "3 Hari 1 Malam",
@@ -49,7 +50,10 @@ export default function DetailPage() {
 
           {/* Right Column: Order Form */}
           <div className="w-full flex justify-center lg:justify-start">
-            <OrderForm />
+            <OrderForm
+              basePrice={PACKAGE_DATA.rawPrice}
+              minPax={PACKAGE_DATA.minPax}
+            />
           </div>
         </div>
       </main>

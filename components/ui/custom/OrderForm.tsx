@@ -6,11 +6,50 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Calendar as CalendarIcon, Send } from "lucide-react"
 
-interface OrderFormProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface OrderFormProps extends React.HTMLAttributes<HTMLDivElement> {
+  basePrice?: number
+  minPax?: number
+}
 
-export function OrderForm({ className, ...props }: OrderFormProps) {
+export function OrderForm({
+  className,
+  basePrice = 1100000,
+  minPax = 50,
+  ...props
+}: OrderFormProps) {
+  const [pax, setPax] = React.useState(minPax)
+
+  // Format currency helper
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const handlePaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value)
+    if (!isNaN(val)) {
+      setPax(val)
+    }
+  }
+
+  const handlePaxBlur = () => {
+    if (pax < minPax) {
+      setPax(minPax)
+    }
+  }
+
+  const totalPrice = pax * basePrice
+  // Calculate min date (today + 3 days)
+  const today = new Date()
+  const minDate = new Date(today)
+  minDate.setDate(today.getDate() + 3)
+  const minDateStr = minDate.toISOString().split('T')[0]
+
   return (
-    <div 
+    <div
       className={cn(
         "bg-white border border-muted rounded-3xl shadow-lg p-8 w-full max-w-[592px] flex flex-col gap-6",
         className
@@ -30,8 +69,8 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
           <label className="text-sm text-foreground flex gap-1">
             Nama Pemesan <span className="text-destructive">*</span>
           </label>
-          <Input 
-            placeholder="Masukkan nama lengkap" 
+          <Input
+            placeholder="Masukkan nama lengkap"
             className="h-[50px] rounded-2xl border-input bg-transparent px-4 py-3 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
@@ -43,8 +82,9 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
               Keberangkatan <span className="text-destructive">*</span>
             </label>
             <div className="relative">
-              <Input 
+              <Input
                 type="date"
+                min={minDateStr}
                 className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm w-full"
               />
               {/* Custom icon overlay if needed, but native date picker has its own */}
@@ -54,9 +94,12 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
             <label className="text-sm text-foreground flex gap-1">
               Jumlah PAX <span className="text-destructive">*</span>
             </label>
-            <Input 
-              type="number" 
-              defaultValue={50}
+            <Input
+              type="number"
+              value={pax}
+              onChange={handlePaxChange}
+              onBlur={handlePaxBlur}
+              min={minPax}
               className="h-[50px] rounded-2xl border-input bg-muted/50 px-4 py-3 text-sm shadow-sm"
             />
           </div>
@@ -67,8 +110,8 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
           <label className="text-sm text-foreground">
             Instansi
           </label>
-          <Input 
-            placeholder="Nama instansi/perusahaan" 
+          <Input
+            placeholder="Nama instansi/perusahaan"
             className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm"
           />
         </div>
@@ -79,9 +122,9 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
             <label className="text-sm text-foreground flex gap-1">
               Email <span className="text-destructive">*</span>
             </label>
-            <Input 
+            <Input
               type="email"
-              placeholder="email@domain.com" 
+              placeholder="email@domain.com"
               className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm"
             />
           </div>
@@ -89,9 +132,9 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
             <label className="text-sm text-foreground flex gap-1">
               WhatsApp <span className="text-destructive">*</span>
             </label>
-            <Input 
+            <Input
               type="tel"
-              placeholder="tambahkan nomor WA anda" 
+              placeholder="tambahkan nomor WA anda"
               className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm"
             />
           </div>
@@ -102,14 +145,25 @@ export function OrderForm({ className, ...props }: OrderFormProps) {
           <label className="text-sm text-foreground">
             Catatan Tambahan (Opsional)
           </label>
-          <textarea 
+          <textarea
             className="min-h-[98px] w-full rounded-2xl border border-input bg-transparent px-4 py-3 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
             placeholder="Tambahkan catatan khusus (opsional)"
           />
         </div>
 
+        {/* Total Price Display */}
+        <div className="flex flex-col gap-2 p-4 bg-muted/30 rounded-2xl border border-muted">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground text-sm">Total Estimasi</span>
+            <span className="text-2xl font-bold text-primary">{formatCurrency(totalPrice)}</span>
+          </div>
+          <p className="text-xs text-muted-foreground text-right italic">
+            *Harga dapat berubah sewaktu-waktu
+          </p>
+        </div>
+
         {/* Submit Button */}
-        <Button 
+        <Button
           className="h-[60px] rounded-2xl bg-gradient-to-r from-primary to-[#009966] hover:from-primary/90 hover:to-[#009966]/90 text-white text-lg font-normal w-full shadow-none"
         >
           <Send className="mr-2 h-5 w-5" />
