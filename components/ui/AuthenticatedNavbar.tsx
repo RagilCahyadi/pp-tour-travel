@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { useState, useEffect, useRef } from 'react'
 import ProfileDropdown from '@/components/ui/ProfileDropdown'
@@ -10,6 +11,7 @@ const imgLogo = "/images/landing/logo.png"
 
 export default function AuthenticatedNavbar() {
   const { isSignedIn, user } = useUser()
+  const pathname = usePathname()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -90,38 +92,51 @@ export default function AuthenticatedNavbar() {
         <div className="flex items-center gap-0 h-[20px]">
           <Link 
             href="/"
-            className="relative font-['Inter',sans-serif] font-medium text-[14px] leading-[20px] text-[#101828] px-[16px] hover:text-[#00bc7d] transition-colors"
+            className={`relative font-['Inter',sans-serif] text-[14px] leading-[20px] px-[16px] hover:text-[#00bc7d] transition-colors ${
+              pathname === '/'
+                ? 'font-semibold text-[#101828] after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-[22px] after:h-[4px] after:rounded-full after:bg-[#00bc7d]'
+                : 'font-normal text-[#4a5565]'
+            }`}
           >
             Beranda
-            <div className="absolute bottom-[-22px] left-0 w-full h-[2px] bg-[#00bc7d]" />
           </Link>
           <Link 
             href="/paket-tour"
-            className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
+            className={`relative font-['Inter',sans-serif] text-[14px] leading-[20px] px-[16px] hover:text-[#00bc7d] transition-colors ${
+              pathname.startsWith('/paket-tour')
+                ? 'font-semibold text-[#101828] after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-[22px] after:h-[4px] after:rounded-full after:bg-[#00bc7d]'
+                : 'font-normal text-[#4a5565]'
+            }`}
           >
             Paket Tour
           </Link>
           {isSignedIn && (
             <Link 
               href="/riwayat-pesanan"
-              className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
+              className={`relative font-['Inter',sans-serif] text-[14px] leading-[20px] px-[16px] hover:text-[#00bc7d] transition-colors ${
+                pathname.startsWith('/riwayat-pesanan')
+                  ? 'font-semibold text-[#101828] after:content-[""] after:absolute after:left-0 after:right-0 after:-bottom-[22px] after:h-[4px] after:rounded-full after:bg-[#00bc7d]'
+                  : 'font-normal text-[#4a5565]'
+              }`}
             >
               Riwayat Pesanan
             </Link>
           )}
-          <button
-            type="button"
-            className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            onClick={() => {
-              const el = document.getElementById('about-us');
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          >
-            Tentang Kami
-          </button>
+          {!pathname.startsWith('/paket-tour') && !pathname.startsWith('/riwayat-pesanan') && (
+            <button
+              type="button"
+              className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={() => {
+                const el = document.getElementById('about-us');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Tentang Kami
+            </button>
+          )}
         </div>
 
         {/* User Actions */}
