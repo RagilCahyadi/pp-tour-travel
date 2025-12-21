@@ -122,7 +122,7 @@ export default function AuthenticatedNavbar() {
               Riwayat Pesanan
             </Link>
           )}
-          {!pathname.startsWith('/paket-tour') && !pathname.startsWith('/riwayat-pesanan') && (
+          {!pathname.startsWith('/paket-tour') && !pathname.startsWith('/riwayat-pesanan') && !pathname.startsWith('/detail') && (
             <button
               type="button"
               className="font-['Inter',sans-serif] font-normal text-[14px] leading-[20px] text-[#4a5565] px-[16px] hover:text-[#00bc7d] transition-colors"
