@@ -33,7 +33,8 @@ export default function Footer() {
                 <Facebook className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/tourtravel.pp/"
+                target="_blank"
                 className="w-10 h-10 bg-gray-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-colors"
               >
                 <Instagram className="w-5 h-5" />
@@ -67,7 +68,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/tentang-kami" className="text-gray-400 hover:text-white transition-colors text-sm">
+                <Link href="/#about-us" className="text-gray-400 hover:text-white transition-colors text-sm">
                   Tentang Kami
                 </Link>
               </li>
@@ -93,14 +94,15 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div className="text-gray-400 text-sm">
-                  <div>Jl. Gatot Subroto No. 123</div>
-                  <div>Jakarta Selatan, 12950</div>
+                  <div>Perumahan Citra Sari Regency SunFlowers Cluster F4 No. 3, Cerme, Gresik, Jawa Timur</div>
                 </div>
               </li>
               <li>
-                <a href="tel:+6281234567890" className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
+                <a href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih" 
+                target="_blank" 
+                className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
                   <Phone className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                  +62 812-3456-7890
+                  +62 856-6420-2185
                 </a>
               </li>
               <li>
@@ -118,14 +120,6 @@ export default function Footer() {
           <p className="text-gray-500 text-sm">
             © 2025 Explore Travel. All rights reserved.
           </p>
-          <div className="flex gap-6">
-            <Link href="/privacy-policy" className="text-gray-400 hover:text-white transition-colors text-sm">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="text-gray-400 hover:text-white transition-colors text-sm">
-              Terms of Service
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

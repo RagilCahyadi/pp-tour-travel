@@ -144,7 +144,9 @@ export default function HowToOrderSection() {
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </Link>
-                <Link href="/contact">
+                <Link 
+                href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih"
+                target="_blank">
                   <button className="inline-flex items-center gap-2 px-8 py-4 bg-[#007a55] hover:bg-[#006644] border-2 border-emerald-300 text-white text-lg rounded-2xl shadow-xl font-medium transition-all duration-300 hover:scale-105">
                     Hubungi Kami
                   </button>

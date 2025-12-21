@@ -1,8 +1,9 @@
 import { TicketCard } from "@/components/ui/custom/TicketCard"
 import { OrderForm } from "@/components/ui/custom/OrderForm"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import AuthenticatedNavbar from "@/components/ui/AuthenticatedNavbar"
+import Footer from "@/components/landing/Footer"
 
 // Mock data
 const PACKAGE_DATA = {
@@ -18,26 +19,25 @@ export default function DetailPage() {
   return (
     <div className="min-h-screen bg-white">
       <AuthenticatedNavbar />
-      
-      <main className="container mx-auto px-4 py-8 md:px-8 md:py-12">
+
+      <main className="container mx-auto px-8 pt-16 pb-8 md:px-8 md:pt-22 md:pb-12">
         {/* Back Button */}
-        <div className="mb-8">
-          <Link 
-            href="/paket-tour" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
-              <ArrowLeft className="w-5 h-5" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 justify-items-center lg:justify-items-stretch">
+          <div className="w-full flex justify-center lg:justify-end">
+            <div className="w-full max-w-[592px]">
+              <Link href="/paket-tour" className="flex items-center gap-2 text-[#4a5565] hover:text-[#00bc7d] mb-6 w-fit group">
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                <span className="text-[16px] font-['Inter']">Kembali ke katalog</span>
+              </Link>
             </div>
-            <span className="font-medium">Kembali ke Katalog</span>
-          </Link>
+          </div>
         </div>
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start justify-items-center lg:justify-items-stretch">
           {/* Left Column: Ticket Card */}
           <div className="w-full flex justify-center lg:justify-end">
-            <TicketCard 
+            <TicketCard
               title={PACKAGE_DATA.title}
               price={PACKAGE_DATA.price}
               minPax={PACKAGE_DATA.minPax}
@@ -53,6 +53,7 @@ export default function DetailPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }
