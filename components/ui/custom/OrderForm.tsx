@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useUser } from "@clerk/nextjs"
+import { supabase } from "@/lib/supabase"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -17,6 +19,7 @@ export function OrderForm({
   minPax = 50,
   ...props
 }: OrderFormProps) {
+  const { user } = useUser()
   const [pax, setPax] = React.useState(minPax)
   const [formData, setFormData] = React.useState({
     name: "",
@@ -24,6 +27,51 @@ export function OrderForm({
     email: "",
     whatsapp: ""
   })
+
+  // Fetch user data and auto-fill form
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id) {
+        console.log('OrderForm: No user ID found')
+        return
+      }
+
+      // Use Clerk user data for name and email
+      const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim()
+      const email = user.primaryEmailAddress?.emailAddress || ''
+      let phone = user.primaryPhoneNumber?.phoneNumber || ''
+
+      // If phone not in Clerk, try getting from Supabase
+      if (!phone) {
+        console.log('OrderForm: No phone in Clerk, fetching from Supabase')
+        const { data } = await supabase
+          .from('users')
+          .select('phone_number')
+          .eq('id', user.id)
+          .single()
+
+        if (data?.phone_number) {
+          phone = data.phone_number
+          console.log('OrderForm: Got phone from Supabase:', phone)
+        }
+      }
+
+      console.log('OrderForm: Auto-filling:', {
+        name: fullName,
+        email,
+        phone
+      })
+
+      setFormData(prev => ({
+        ...prev,
+        name: fullName,
+        email: email,
+        whatsapp: phone
+      }))
+    }
+
+    fetchUserData()
+  }, [user])
 
   // Format currency helper
   const formatCurrency = (amount: number) => {

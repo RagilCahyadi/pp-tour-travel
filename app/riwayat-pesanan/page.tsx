@@ -21,6 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AuthenticatedNavbar from "@/components/ui/AuthenticatedNavbar";
 import Footer from "@/components/landing/Footer";
+import EditBookingDialog from "@/components/ui/custom/EditBookingDialog";
+import DeleteBookingDialog from "@/components/ui/custom/DeleteBookingDialog";
+import PrintBookingDialog from "@/components/ui/custom/PrintBookingDialog";
 
 // For now using mock data - will be replaced with Supabase data later
 const mockBookings = [
@@ -42,6 +45,9 @@ export default function RiwayatPesanan() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"semua" | "menunggu" | "terkonfirmasi">("semua");
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
 
   const handleSelectBooking = (id: string) => {
     if (selectedBookings.includes(id)) {
@@ -179,11 +185,17 @@ export default function RiwayatPesanan() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button className="bg-[#2b7fff] hover:bg-[#1e5fd9] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal">
+                    <Button 
+                      onClick={() => setIsEditDialogOpen(true)}
+                      className="bg-[#2b7fff] hover:bg-[#1e5fd9] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                    >
                       <Edit className="w-4 h-4" />
                       Edit
                     </Button>
-                    <Button className="bg-[#fb2c36] hover:bg-[#d91f28] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal">
+                    <Button 
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="bg-[#fb2c36] hover:bg-[#d91f28] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                    >
                       <Trash2 className="w-4 h-4" />
                       Hapus
                     </Button>
@@ -191,7 +203,10 @@ export default function RiwayatPesanan() {
                       <CreditCard className="w-4 h-4" />
                       Bayar
                     </Button>
-                    <Button className="bg-[#ad46ff] hover:bg-[#9333ea] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal">
+                    <Button 
+                      onClick={() => setIsPrintDialogOpen(true)}
+                      className="bg-[#ad46ff] hover:bg-[#9333ea] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                    >
                       <Printer className="w-4 h-4" />
                       Cetak
                     </Button>
@@ -303,6 +318,29 @@ export default function RiwayatPesanan() {
         </div>
       </div>
       
+      <EditBookingDialog 
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        booking={mockBookings.find(b => selectedBookings.includes(b.id)) || null}
+      />
+
+      <DeleteBookingDialog 
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={() => {
+          // Handle delete logic here
+          setIsDeleteDialogOpen(false);
+          setSelectedBookings([]);
+        }}
+        count={selectedBookings.length}
+      />
+
+      <PrintBookingDialog 
+        isOpen={isPrintDialogOpen}
+        onClose={() => setIsPrintDialogOpen(false)}
+        booking={mockBookings.find(b => selectedBookings.includes(b.id)) || null}
+      />
+
       <Footer />
     </div>
   );
