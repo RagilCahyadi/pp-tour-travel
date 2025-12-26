@@ -11,15 +11,6 @@ import { supabase } from "@/lib/supabase";
 
 // Image Constants from Figma
 const imgImagePaketPremiumBali = "https://www.figma.com/api/mcp/asset/2c1ac9c2-23d7-4a0e-96ca-09458a25f8ef";
-const imgImagePaketEkonomisBali = "https://www.figma.com/api/mcp/asset/f9da0e00-4754-48f1-8ac1-3f22b59151ce";
-const imgImagePaketPremiumYogyakarta = "https://www.figma.com/api/mcp/asset/ef1b1bfc-3db2-4473-af02-172b9fbe1634";
-const imgImagePaketEkonomisYogyakarta = "https://www.figma.com/api/mcp/asset/42e929e0-ac1d-4869-9845-cf90d0a8c629";
-const imgImagePaketPremiumMalangBatu = "https://www.figma.com/api/mcp/asset/3e5f4e0d-7a0c-4bd2-a122-e7292a71f74c";
-const imgImagePaketEkonomisMalangBatu = "https://www.figma.com/api/mcp/asset/92d98b52-7dd8-4789-b7ae-8539fd10ced0";
-const imgImagePaketPremiumSemarang = "https://www.figma.com/api/mcp/asset/6fb254f5-fb87-4dfb-a105-2811bc848f2b";
-const imgImagePaketEkonomisSemarang = "https://www.figma.com/api/mcp/asset/6a87aefc-a213-4975-97f3-527686b66c06";
-const imgImagePaketPremiumBandung = "https://www.figma.com/api/mcp/asset/bc5d623e-ff04-4c68-8203-0f292247a83b";
-const imgImagePaketEkonomisBandung = "https://www.figma.com/api/mcp/asset/e2eb8239-7ebf-4c49-b687-e1cf5b3e5b24";
 
 interface TourPackage {
   id: string;
@@ -118,10 +109,10 @@ export default function PackageCatalog() {
   return (
     <div className="bg-[#f9fafb] min-h-screen pb-20">
       {/* Hero Section */}
-      <div 
+      <div
         className="w-full h-[216px] pt-[75px] px-4 md:px-[193.5px] flex flex-col items-start justify-center relative"
-        style={{ 
-          backgroundImage: "linear-gradient(171.87deg, #009966 0%, #007A55 100%)" 
+        style={{
+          backgroundImage: "linear-gradient(171.87deg, #009966 0%, #007A55 100%)"
         }}
       >
         <div className="max-w-7xl mx-auto w-full">
@@ -143,8 +134,8 @@ export default function PackageCatalog() {
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 <Search className="w-5 h-5" />
               </div>
-              <Input 
-                placeholder="Cari paket atau destinasi..." 
+              <Input
+                placeholder="Cari paket atau destinasi..."
                 className="pl-10 h-[50px] border-[#d1d5dc] rounded-[10px] text-[16px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,7 +145,7 @@ export default function PackageCatalog() {
             {/* Dropdowns */}
             <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
               <div className="relative min-w-[200px]">
-                <select 
+                <select
                   className="w-full h-[50px] px-4 border border-[#d1d5dc] rounded-[10px] appearance-none bg-white text-[#4a5565] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009966]"
                   value={selectedDestination}
                   onChange={(e) => setSelectedDestination(e.target.value)}
@@ -170,7 +161,7 @@ export default function PackageCatalog() {
               </div>
 
               <div className="relative min-w-[200px]">
-                <select 
+                <select
                   className="w-full h-[50px] px-4 border border-[#d1d5dc] rounded-[10px] appearance-none bg-white text-[#4a5565] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009966]"
                   value={selectedDuration}
                   onChange={(e) => setSelectedDuration(e.target.value)}
@@ -185,7 +176,7 @@ export default function PackageCatalog() {
               </div>
 
               <div className="relative min-w-[200px]">
-                <select 
+                <select
                   className="w-full h-[50px] px-4 border border-[#d1d5dc] rounded-[10px] appearance-none bg-white text-[#4a5565] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#009966]"
                   value={selectedPrice}
                   onChange={(e) => setSelectedPrice(e.target.value)}
@@ -234,13 +225,12 @@ export default function PackageCatalog() {
                   />
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  
+
                   {/* Badge */}
-                  <div className={`absolute top-4 right-4 px-3 py-1 rounded-full border backdrop-blur-sm ${
-                    pkg.tipe_paket === 'Premium' 
-                      ? 'bg-[#fe9a00]/20 border-[#ffb900]/30 text-[#fef3c6]' 
+                  <div className={`absolute top-4 right-4 px-3 py-1 rounded-full border backdrop-blur-sm ${pkg.tipe_paket === 'Premium'
+                      ? 'bg-[#fe9a00]/20 border-[#ffb900]/30 text-[#fef3c6]'
                       : 'bg-[#00bc7d]/20 border-[#00d492]/30 text-[#d0fae5]'
-                  }`}>
+                    }`}>
                     <span className="text-xs font-normal">{pkg.tipe_paket}</span>
                   </div>
                 </div>
@@ -275,8 +265,8 @@ export default function PackageCatalog() {
                         Rp {pkg.harga.toLocaleString('id-ID')}
                       </span>
                     </div>
-                    <Link href={`/paket-tour/${pkg.id}`}>
-                      <Button 
+                    <Link href={`/detail/${pkg.id}`}>
+                      <Button
                         className="bg-gradient-to-r from-[#00bc7d] to-[#009966] hover:from-[#00a870] hover:to-[#008a5c] text-white rounded-[10px] px-4 py-2 h-[40px] flex items-center gap-2"
                       >
                         Lihat Detail
@@ -309,11 +299,10 @@ export default function PackageCatalog() {
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   onClick={() => setCurrentPage(page)}
-                  className={`h-10 w-10 ${
-                    currentPage === page 
-                      ? 'bg-gradient-to-r from-[#00bc7d] to-[#009966] text-white hover:from-[#00a870] hover:to-[#008a5c]' 
+                  className={`h-10 w-10 ${currentPage === page
+                      ? 'bg-gradient-to-r from-[#00bc7d] to-[#009966] text-white hover:from-[#00a870] hover:to-[#008a5c]'
                       : ''
-                  }`}
+                    }`}
                 >
                   {page}
                 </Button>

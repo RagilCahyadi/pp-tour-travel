@@ -19,9 +19,6 @@ export default function Home() {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Top 3 Destinations Ranking (Supabase Integrated) */}
-      <TopDestinationsRanking />
-
       {/* Featured Tour Packages (Supabase Integrated) */}
       <FeaturedTourPackages />
 

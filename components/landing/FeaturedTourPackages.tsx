@@ -52,7 +52,7 @@ export default function FeaturedTourPackages() {
         {/* View All Button */}
         <div className="flex justify-center">
           <Link
-            href="/paket"
+            href="/paket-tour"
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
           >
             <span className="text-lg">Lihat Semua Paket Tour</span>

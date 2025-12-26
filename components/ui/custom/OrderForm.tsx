@@ -18,6 +18,12 @@ export function OrderForm({
   ...props
 }: OrderFormProps) {
   const [pax, setPax] = React.useState(minPax)
+  const [formData, setFormData] = React.useState({
+    name: "",
+    date: "",
+    email: "",
+    whatsapp: ""
+  })
 
   // Format currency helper
   const formatCurrency = (amount: number) => {
@@ -32,14 +38,17 @@ export function OrderForm({
     const val = parseInt(e.target.value)
     if (!isNaN(val)) {
       setPax(val)
+    } else {
+      setPax(0)
     }
   }
 
-  const handlePaxBlur = () => {
-    if (pax < minPax) {
-      setPax(minPax)
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
+
+
 
   const totalPrice = pax * basePrice
   // Calculate min date (today + 3 days)
@@ -47,6 +56,9 @@ export function OrderForm({
   const minDate = new Date(today)
   minDate.setDate(today.getDate() + 3)
   const minDateStr = minDate.toISOString().split('T')[0]
+
+  // Check if all required fields are filled
+  const isFormValid = formData.name && formData.date && formData.email && formData.whatsapp && pax >= minPax
 
   return (
     <div
@@ -71,6 +83,9 @@ export function OrderForm({
           </label>
           <Input
             placeholder="Masukkan nama lengkap"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
             className="h-[50px] rounded-2xl border-input bg-transparent px-4 py-3 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
@@ -84,6 +99,9 @@ export function OrderForm({
             <div className="relative">
               <Input
                 type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
                 min={minDateStr}
                 className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm w-full"
               />
@@ -96,12 +114,18 @@ export function OrderForm({
             </label>
             <Input
               type="number"
-              value={pax}
+              value={pax || ''}
               onChange={handlePaxChange}
-              onBlur={handlePaxBlur}
-              min={minPax}
-              className="h-[50px] rounded-2xl border-input bg-muted/50 px-4 py-3 text-sm shadow-sm"
+              className={cn(
+                "h-[50px] rounded-2xl border-input bg-muted/50 px-4 py-3 text-sm shadow-sm",
+                pax < minPax && "border-destructive focus-visible:ring-destructive"
+              )}
             />
+            {pax < minPax && (
+              <span className="text-xs text-destructive">
+                Minimal pemesanan {minPax} pax
+              </span>
+            )}
           </div>
         </div>
 
@@ -124,6 +148,9 @@ export function OrderForm({
             </label>
             <Input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
               placeholder="email@domain.com"
               className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm"
             />
@@ -134,6 +161,9 @@ export function OrderForm({
             </label>
             <Input
               type="tel"
+              name="whatsapp"
+              value={formData.whatsapp}
+              onChange={handleInputChange}
               placeholder="tambahkan nomor WA anda"
               className="h-[50px] rounded-2xl border-input px-4 py-3 text-sm shadow-sm"
             />
@@ -164,7 +194,8 @@ export function OrderForm({
 
         {/* Submit Button */}
         <Button
-          className="h-[60px] rounded-2xl bg-gradient-to-r from-primary to-[#009966] hover:from-primary/90 hover:to-[#009966]/90 text-white text-lg font-normal w-full shadow-none"
+          disabled={!isFormValid}
+          className="h-[60px] rounded-2xl bg-gradient-to-r from-primary to-[#009966] hover:from-primary/90 hover:to-[#009966]/90 text-white text-lg font-normal w-full shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="mr-2 h-5 w-5" />
           Pesan Sekarang
