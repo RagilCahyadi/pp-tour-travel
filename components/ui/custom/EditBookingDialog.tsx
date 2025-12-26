@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Calendar,
@@ -8,17 +8,18 @@ import {
   Phone,
   Users,
   Building2,
-  FileText,
   Save,
-  Edit
+  Edit,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 interface EditBookingDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave?: () => void;
   booking: {
     id: string;
     kode_booking: string;
@@ -34,9 +35,22 @@ interface EditBookingDialogProps {
   } | null;
 }
 
-export default function EditBookingDialog({ isOpen, onClose, booking }: EditBookingDialogProps) {
-  // Helper to convert "9 Desember 2025" to "2025-12-09" for input type="date"
+export default function EditBookingDialog({ isOpen, onClose, onSave, booking }: EditBookingDialogProps) {
+  // State for form fields
+  const [namaPemesan, setNamaPemesan] = useState("");
+  const [tanggalKeberangkatan, setTanggalKeberangkatan] = useState("");
+  const [kontak, setKontak] = useState("");
+  const [instansi, setInstansi] = useState("");
+  const [catatan, setCatatan] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Helper to convert "9 Desember 2025" or ISO date to "2025-12-09" for input
   const formatDateForInput = (dateString: string) => {
+    // If already in ISO format (2025-12-09)
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+      return dateString.split('T')[0];
+    }
+
     const months: { [key: string]: string } = {
       'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04', 'Mei': '05', 'Juni': '06',
       'Juli': '07', 'Agustus': '08', 'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12'
@@ -51,22 +65,14 @@ export default function EditBookingDialog({ isOpen, onClose, booking }: EditBook
     return "";
   };
 
-  // State for form fields
-  const [namaPemesan, setNamaPemesan] = useState("");
-  const [tanggalKeberangkatan, setTanggalKeberangkatan] = useState("");
-  const [kontak, setKontak] = useState("");
-  const [instansi, setInstansi] = useState("");
-  const [catatan, setCatatan] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-
   // Initialize form when booking changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (booking) {
-      setNamaPemesan(booking.nama_pemesan);
-      setTanggalKeberangkatan(formatDateForInput(booking.tanggal_keberangkatan));
-      setKontak(booking.kontak);
-      setInstansi(booking.instansi);
-      setCatatan(booking.catatan || "Penyediaan Obat umum dan Alat P3K Sederhana");
+      setNamaPemesan(booking.nama_pemesan || "");
+      setTanggalKeberangkatan(formatDateForInput(booking.tanggal_keberangkatan) || "");
+      setKontak(booking.kontak || "");
+      setInstansi(booking.instansi || "");
+      setCatatan(booking.catatan || "");
     }
   }, [booking]);
 
@@ -75,25 +81,42 @@ export default function EditBookingDialog({ isOpen, onClose, booking }: EditBook
   const handleSubmit = async () => {
     setIsSaving(true);
     try {
-      // Prepare updated booking data
-      const updatedData = {
-        id: booking.id,
-        nama_pemesan: namaPemesan,
-        tanggal_keberangkatan: tanggalKeberangkatan,
-        kontak: kontak,
-        instansi: instansi,
-        catatan: catatan,
-      };
+      // Get the booking to find customer_id
+      const { data: bookingData, error: fetchError } = await supabase
+        .from('bookings')
+        .select('customer_id')
+        .eq('id', booking.id)
+        .single();
 
-      console.log("Saving booking:", updatedData);
+      if (fetchError) throw fetchError;
 
-      // TODO: Call API to update booking in database
-      // await updateBooking(updatedData);
+      // Update booking
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({
+          tanggal_keberangkatan: tanggalKeberangkatan,
+          catatan: catatan,
+        })
+        .eq('id', booking.id);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (bookingError) throw bookingError;
+
+      // Update customer
+      if (bookingData?.customer_id) {
+        const { error: customerError } = await supabase
+          .from('customers')
+          .update({
+            nama_pelanggan: namaPemesan,
+            nama_perusahaan: instansi || null,
+            nomor_telepon: kontak,
+          })
+          .eq('id', bookingData.customer_id);
+
+        if (customerError) throw customerError;
+      }
 
       alert("✅ Perubahan berhasil disimpan!");
+      onSave?.();
       onClose();
     } catch (error) {
       console.error("Error saving booking:", error);
@@ -135,7 +158,7 @@ export default function EditBookingDialog({ isOpen, onClose, booking }: EditBook
           <div className="bg-gradient-to-r from-[#ecfdf5] to-[rgba(208,250,229,0.5)] border border-[#a4f4cf] rounded-[16px] p-4 flex flex-col gap-1">
             <span className="text-[#4a5565] text-sm">Paket Tour</span>
             <h3 className="text-[#101828] text-lg font-medium">{booking.paket_tour}</h3>
-            <span className="text-[#009966] text-sm">{booking.destination || "Bali"}</span>
+            <span className="text-[#009966] text-sm">{booking.destination || "Indonesia"}</span>
           </div>
 
           {/* Form Fields Grid */}
@@ -228,7 +251,7 @@ export default function EditBookingDialog({ isOpen, onClose, booking }: EditBook
           {/* Total Pembayaran Box */}
           <div className="bg-gradient-to-r from-[#eff6ff] to-[rgba(219,234,254,0.5)] border border-[#bedbff] rounded-[16px] p-4 flex items-center justify-between">
             <span className="text-[#4a5565] text-sm">Total Pembayaran</span>
-            <span className="text-[#155dfc] text-2xl font-bold">{booking.total_pembayaran || "Rp 55.000.000"}</span>
+            <span className="text-[#155dfc] text-2xl font-bold">{booking.total_pembayaran || "Rp 0"}</span>
           </div>
 
           {/* Action Buttons */}
@@ -245,8 +268,17 @@ export default function EditBookingDialog({ isOpen, onClose, booking }: EditBook
               disabled={isSaving}
               className="flex-1 h-[48px] rounded-[16px] bg-gradient-to-r from-[#2b7fff] to-[#155dfc] text-white hover:opacity-90 text-[16px] font-normal gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5" />
-              {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Simpan Perubahan
+                </>
+              )}
             </Button>
           </div>
 

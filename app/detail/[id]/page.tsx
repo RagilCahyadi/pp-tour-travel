@@ -120,6 +120,8 @@ export default function DetailPage() {
                         <OrderForm
                             basePrice={selectedPackage.harga}
                             minPax={selectedPackage.minimal_penumpang}
+                            packageId={packageId}
+                            packageName={selectedPackage.nama_paket}
                         />
                     </div>
                 </div>
