@@ -24,11 +24,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to update payment status' }, { status: 500 });
         }
 
-        // Also update booking status to confirmed if needed
-        await supabase
-            .from('bookings')
-            .update({ status: 'confirmed' })
-            .eq('id', bookingId);
+        // Note: Booking status (confirmed) is only updated by admin, not automatically on payment success
 
         return NextResponse.json({
             success: true,

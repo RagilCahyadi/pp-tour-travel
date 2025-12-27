@@ -35,11 +35,20 @@ export interface UpcomingDeparture {
   jumlah_pax: number
 }
 
+export interface PopularPackage {
+  id: string
+  nama_paket: string
+  bookings: number
+  percentage: number
+  color: string
+}
+
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyBooking[]>([])
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
   const [upcomingDepartures, setUpcomingDepartures] = useState<UpcomingDeparture[]>([])
+  const [popularPackages, setPopularPackages] = useState<PopularPackage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,7 +59,7 @@ export function useDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
+
       const now = new Date()
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
       const startOfWeek = new Date(now)
@@ -102,7 +111,7 @@ export function useDashboard() {
       for (let i = 5; i >= 0; i--) {
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
-        
+
         const { count } = await supabase
           .from('bookings')
           .select('*', { count: 'exact', head: true })
@@ -145,8 +154,8 @@ export function useDashboard() {
       const formattedBookings = bookingsData?.map(b => ({
         id: b.id,
         kode_booking: b.kode_booking,
-        nama_pelanggan: b.customers?.nama_pelanggan || 'N/A',
-        nama_paket: b.tour_packages?.nama_paket || 'N/A',
+        nama_pelanggan: (b.customers as any)?.nama_pelanggan || 'N/A',
+        nama_paket: (b.tour_packages as any)?.nama_paket || 'N/A',
         jumlah_pax: b.jumlah_pax,
         status: b.status,
         created_at: b.created_at
@@ -172,14 +181,59 @@ export function useDashboard() {
       const formattedDepartures = departuresData?.map(d => ({
         id: d.id,
         kode_jadwal: d.kode_jadwal,
-        nama_paket: d.tour_packages?.nama_paket || 'N/A',
+        nama_paket: (d.tour_packages as any)?.nama_paket || 'N/A',
         tanggal_keberangkatan: d.tanggal_keberangkatan,
         waktu_keberangkatan: d.waktu_keberangkatan,
-        nama_instansi: d.bookings?.[0]?.customers?.nama_perusahaan || 'N/A',
-        jumlah_pax: d.bookings?.reduce((sum, b) => sum + (b.jumlah_pax || 0), 0) || 0
+        nama_instansi: (d.bookings as any)?.[0]?.customers?.nama_perusahaan || 'N/A',
+        jumlah_pax: (d.bookings as any[])?.reduce((sum: number, b: any) => sum + (b.jumlah_pax || 0), 0) || 0
       })) || []
 
       setUpcomingDepartures(formattedDepartures)
+
+      // Fetch popular packages this month
+      const { data: packageBookingsData } = await supabase
+        .from('bookings')
+        .select(`
+          package_id,
+          tour_packages(id, nama_paket)
+        `)
+        .gte('created_at', startOfMonth.toISOString())
+
+      // Count bookings per package
+      const packageCounts: { [key: string]: { id: string, nama_paket: string, count: number } } = {}
+      packageBookingsData?.forEach(booking => {
+        const pkg = booking.tour_packages as any
+        if (pkg?.id) {
+          if (!packageCounts[pkg.id]) {
+            packageCounts[pkg.id] = { id: pkg.id, nama_paket: pkg.nama_paket, count: 0 }
+          }
+          packageCounts[pkg.id].count++
+        }
+      })
+
+      // Sort by count and take top 4
+      const sortedPackages = Object.values(packageCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4)
+
+      // Calculate percentages and assign colors
+      const maxBookings = sortedPackages[0]?.count || 1
+      const colors = [
+        'from-emerald-500 to-emerald-600',
+        'from-blue-500 to-blue-600',
+        'from-purple-500 to-purple-600',
+        'from-amber-500 to-amber-600'
+      ]
+
+      const formattedPopular: PopularPackage[] = sortedPackages.map((pkg, idx) => ({
+        id: pkg.id,
+        nama_paket: pkg.nama_paket,
+        bookings: pkg.count,
+        percentage: Math.round((pkg.count / maxBookings) * 100),
+        color: colors[idx] || colors[0]
+      }))
+
+      setPopularPackages(formattedPopular)
 
       setError(null)
     } catch (err: any) {
@@ -195,6 +249,7 @@ export function useDashboard() {
     monthlyData,
     recentBookings,
     upcomingDepartures,
+    popularPackages,
     loading,
     error,
     refetch: fetchDashboardData

@@ -50,6 +50,18 @@ export function useSchedules(statusFilter?: string) {
   const fetchSchedules = async () => {
     try {
       setLoading(true)
+
+      // First, update any expired schedules to 'tidak-aktif' via API
+      try {
+        await fetch('/api/schedule/update-expired', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (expiredErr) {
+        console.error('Error updating expired schedules:', expiredErr);
+        // Continue fetching even if this fails
+      }
+
       let query = supabase
         .from('schedules')
         .select(`
@@ -90,7 +102,7 @@ export function useSchedules(statusFilter?: string) {
   const createSchedule = async (scheduleData: CreateScheduleData) => {
     try {
       console.log('Creating schedule with data:', scheduleData)
-      
+
       const { data, error } = await supabase
         .from('schedules')
         .insert([scheduleData as any])
@@ -103,20 +115,20 @@ export function useSchedules(statusFilter?: string) {
         console.error('Error message:', error.message)
         console.error('Error details:', error.details)
         console.error('Error hint:', error.hint)
-        
+
         // Handle duplicate key error
         if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
           throw new Error('Kode jadwal sudah digunakan. Silakan gunakan kode jadwal yang berbeda.')
         }
-        
+
         // Handle other specific errors
         if (error.code === '23503') {
           throw new Error('Paket tour tidak ditemukan. Silakan pilih paket tour yang valid.')
         }
-        
+
         throw new Error(error.message || error.hint || 'Gagal membuat jadwal')
       }
-      
+
       await fetchSchedules()
       return { data, error: null }
     } catch (err: any) {
@@ -129,7 +141,7 @@ export function useSchedules(statusFilter?: string) {
   const updateSchedule = async (id: string, scheduleData: Partial<CreateScheduleData>) => {
     try {
       console.log('Updating schedule with data:', scheduleData)
-      
+
       const { data, error } = await supabase
         .from('schedules')
         .update(scheduleData as any)
@@ -141,20 +153,20 @@ export function useSchedules(statusFilter?: string) {
         console.error('Supabase error (full):', JSON.stringify(error, null, 2))
         console.error('Error code:', error.code)
         console.error('Error message:', error.message)
-        
+
         // Handle duplicate key error
         if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
           throw new Error('Kode jadwal sudah digunakan. Silakan gunakan kode jadwal yang berbeda.')
         }
-        
+
         // Handle foreign key error
         if (error.code === '23503') {
           throw new Error('Paket tour tidak ditemukan. Silakan pilih paket tour yang valid.')
         }
-        
+
         throw new Error(error.message || error.hint || 'Gagal memperbarui jadwal')
       }
-      
+
       await fetchSchedules()
       return { data, error: null }
     } catch (err: any) {

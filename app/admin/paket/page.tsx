@@ -482,7 +482,10 @@ export default function AdminPaketPage() {
   const stats = {
     total: packages.length,
     premium: packages.filter(p => p.tipe_paket === 'Premium').length,
-    ekonomis: packages.filter(p => p.tipe_paket === 'Ekonomis').length
+    ekonomis: packages.filter(p => p.tipe_paket === 'Ekonomis').length,
+    avgHarga: packages.length > 0
+      ? Math.round(packages.reduce((sum, p) => sum + (p.harga || 0), 0) / packages.length)
+      : 0
   }
 
   return (
@@ -566,7 +569,7 @@ export default function AdminPaketPage() {
                 </div>
                 <div>
                   <p className="text-base text-[#6a7282]">Avg. Harga</p>
-                  <p className="text-base text-[#101828] font-semibold">Rp 976K</p>
+                  <p className="text-base text-[#101828] font-semibold">{formatRupiah(stats.avgHarga)}</p>
                 </div>
               </div>
             </div>

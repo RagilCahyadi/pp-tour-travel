@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 
 export default function AdminDashboard() {
-  const { stats, monthlyData, recentBookings, upcomingDepartures, loading, error } = useDashboard()
+  const { stats, monthlyData, recentBookings, upcomingDepartures, popularPackages, loading, error } = useDashboard()
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { user } = useUser()
@@ -81,14 +81,14 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-4">
-             
+
 
               {/* Profile */}
               <Link href="/admin/pengaturan" className="flex items-center gap-3 p-2 pr-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group">
                 {user?.imageUrl ? (
-                  <img 
-                    src={user.imageUrl} 
-                    alt={user.fullName || 'Admin'} 
+                  <img
+                    src={user.imageUrl}
+                    alt={user.fullName || 'Admin'}
                     className="w-9 h-9 rounded-lg object-cover"
                   />
                 ) : (
@@ -198,26 +198,26 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={monthlyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="month" 
+                    <XAxis
+                      dataKey="month"
                       stroke="#6a7282"
                       style={{ fontSize: '12px' }}
                     />
-                    <YAxis 
+                    <YAxis
                       yAxisId="left"
                       stroke="#6a7282"
                       style={{ fontSize: '12px' }}
                     />
-                    <YAxis 
+                    <YAxis
                       yAxisId="right"
                       orientation="right"
                       stroke="#6a7282"
                       style={{ fontSize: '12px' }}
                       tickFormatter={(value) => `${(value / 1000000).toFixed(0)}jt`}
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
                         border: '1px solid #e5e7eb',
                         borderRadius: '8px',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
@@ -228,20 +228,20 @@ export default function AdminDashboard() {
                         return [value, name]
                       }}
                     />
-                    <Line 
+                    <Line
                       yAxisId="left"
-                      type="monotone" 
-                      dataKey="bookings" 
-                      stroke="#009966" 
+                      type="monotone"
+                      dataKey="bookings"
+                      stroke="#009966"
                       strokeWidth={3}
                       dot={{ fill: '#009966', r: 4 }}
                       activeDot={{ r: 6 }}
                     />
-                    <Line 
+                    <Line
                       yAxisId="right"
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#3b82f6" 
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#3b82f6"
                       strokeWidth={3}
                       dot={{ fill: '#3b82f6', r: 4 }}
                       activeDot={{ r: 6 }}
@@ -282,9 +282,9 @@ export default function AdminDashboard() {
                         <Cell fill="#10b981" />
                         <Cell fill="#f59e0b" />
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
                           border: '1px solid #e5e7eb',
                           borderRadius: '8px'
                         }}
@@ -329,28 +329,29 @@ export default function AdminDashboard() {
               </Link>
             </div>
             <div className="space-y-4">
-              {[
-                { name: 'Bali 5D4N', percentage: 85, bookings: 24, color: 'from-emerald-500 to-emerald-600' },
-                { name: 'Bromo 3D2N', percentage: 65, bookings: 18, color: 'from-blue-500 to-blue-600' },
-                { name: 'Yogyakarta 4D3N', percentage: 50, bookings: 14, color: 'from-purple-500 to-purple-600' },
-                { name: 'Raja Ampat 6D5N', percentage: 35, bookings: 10, color: 'from-amber-500 to-amber-600' }
-              ].map((tour, idx) => (
-                <div key={idx} className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-[#101828]">{tour.name}</span>
-                    <span className="text-xs text-gray-500">{tour.bookings} booking</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className={`bg-gradient-to-r ${tour.color} h-3 rounded-full transition-all duration-1000 ease-out group-hover:opacity-80`}
-                        style={{ width: mounted ? `${tour.percentage}%` : '0%' }}
-                      ></div>
+              {popularPackages.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">
+                  Belum ada data booking bulan ini
+                </p>
+              ) : (
+                popularPackages.map((tour, idx) => (
+                  <div key={tour.id} className="group">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-[#101828]">{tour.nama_paket}</span>
+                      <span className="text-xs text-gray-500">{tour.bookings} booking</span>
                     </div>
-                    <span className="text-sm font-medium text-gray-600 w-12 text-right">{tour.percentage}%</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div
+                          className={`bg-gradient-to-r ${tour.color} h-3 rounded-full transition-all duration-1000 ease-out group-hover:opacity-80`}
+                          style={{ width: mounted ? `${tour.percentage}%` : '0%' }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 w-12 text-right">{tour.percentage}%</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -383,14 +384,12 @@ export default function AdminDashboard() {
                   filteredBookings.map((booking) => (
                     <div key={booking.id} className="border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:border-[#009966] hover:shadow-sm transition-all duration-300 cursor-pointer">
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          booking.status === 'confirmed' ? 'bg-emerald-50' : 
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${booking.status === 'confirmed' ? 'bg-emerald-50' :
                           booking.status === 'pending' ? 'bg-yellow-50' : 'bg-gray-50'
-                        }`}>
-                          <svg className={`w-5 h-5 ${
-                            booking.status === 'confirmed' ? 'text-emerald-600' : 
+                          }`}>
+                          <svg className={`w-5 h-5 ${booking.status === 'confirmed' ? 'text-emerald-600' :
                             booking.status === 'pending' ? 'text-yellow-600' : 'text-gray-600'
-                          }`} fill="currentColor" viewBox="0 0 20 20">
+                            }`} fill="currentColor" viewBox="0 0 20 20">
                             {booking.status === 'confirmed' ? (
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             ) : (

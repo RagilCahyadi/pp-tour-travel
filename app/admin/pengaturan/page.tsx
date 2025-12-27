@@ -47,52 +47,61 @@ export default function AdminPengaturanPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [profileId, setProfileId] = useState<string | null>(null)
-  
+
   // User Management states
   const [users, setUsers] = useState<UserData[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [updatingUser, setUpdatingUser] = useState<string | null>(null)
 
-  // Fetch profile data from Supabase
+  // Fetch profile data from Supabase users table
   useEffect(() => {
     const fetchProfile = async () => {
       if (!isLoaded || !user?.id) return
 
       try {
         setLoading(true)
-        
-        // Fetch admin profile
-        const { data: profile, error } = await supabase
-          .from('admin_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
 
-        // Check for actual errors (not just "no rows")
-        // PGRST116 = no rows returned, which is OK for new profiles
-        if (error && error.code && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error.message || error)
-          return
-        }
+        // Fetch user profile from Supabase users table via API
+        const response = await fetch(`/api/admin/profile?userId=${user.id}`)
 
-        if (profile) {
-          setProfileId(profile.id)
-          setProfileData({
-            nama: profile.nama || '',
-            hakAkses: profile.hak_akses || 'Admin-1',
-            negara: profile.negara || 'Indonesia',
-            kota: profile.kota || '',
-            alamat: profile.alamat || '',
-            email: profile.email || user.primaryEmailAddress?.emailAddress || '',
-            nomorHp: profile.nomor_hp || '',
-            bahasa: profile.bahasa || 'id',
-            zonaWaktu: profile.zona_waktu || 'GMT+7',
-            fotoProfil: profile.foto_profil_url || user.imageUrl
-          })
+        if (response.ok) {
+          const result = await response.json()
+          const userData = result.data
+
+          if (userData) {
+            // Split first_name and last_name or combine them
+            const fullName = `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
+
+            setProfileData({
+              nama: fullName || user.fullName || 'Admin',
+              hakAkses: 'Admin-1',
+              negara: 'Indonesia',
+              kota: '',
+              alamat: '',
+              email: userData.email_address || user.primaryEmailAddress?.emailAddress || '',
+              nomorHp: userData.phone_number || '',
+              bahasa: 'id',
+              zonaWaktu: 'GMT+7',
+              fotoProfil: user.imageUrl
+            })
+          } else {
+            // No user data found, use Clerk defaults
+            setProfileData({
+              nama: user.fullName || user.firstName || 'Admin',
+              hakAkses: 'Admin-1',
+              negara: 'Indonesia',
+              kota: '',
+              alamat: '',
+              email: user.primaryEmailAddress?.emailAddress || '',
+              nomorHp: '',
+              bahasa: 'id',
+              zonaWaktu: 'GMT+7',
+              fotoProfil: user.imageUrl
+            })
+          }
         } else {
-          // Profile doesn't exist, set default data from user info
-          // Don't create profile automatically, just populate form
-          console.log('Profile not found, using default data from Clerk user')
+          // API error, fallback to Clerk data
+          console.log('Profile API error, using Clerk data')
           setProfileData({
             nama: user.fullName || user.firstName || 'Admin',
             hakAkses: 'Admin-1',
@@ -123,17 +132,17 @@ export default function AdminPengaturanPage() {
 
       try {
         setLoadingUsers(true)
-        
+
         // Use API route to bypass RLS since we're using Clerk auth
         const response = await fetch('/api/admin/users')
-        
+
         if (!response.ok) {
           console.error('Error fetching users:', response.statusText)
           return
         }
-        
+
         const data = await response.json()
-        
+
         if (data.users) {
           setUsers(data.users)
         }
@@ -177,7 +186,7 @@ export default function AdminPengaturanPage() {
       }
 
       // Update local state
-      setUsers(users.map(u => 
+      setUsers(users.map(u =>
         u.id === userId ? { ...u, is_admin: !currentStatus } : u
       ))
       alert('Status admin berhasil diubah!')
@@ -191,7 +200,7 @@ export default function AdminPengaturanPage() {
 
   const handleBanUser = async (userId: string, currentBanStatus: string | null) => {
     const isBanned = currentBanStatus !== null
-    
+
     if (!confirm(`Apakah Anda yakin ingin ${isBanned ? 'membuka ban' : 'memban'} user ini?`)) {
       return
     }
@@ -220,7 +229,7 @@ export default function AdminPengaturanPage() {
       }
 
       // Update local state
-      setUsers(users.map(u => 
+      setUsers(users.map(u =>
         u.id === userId ? { ...u, banned_at: updateData.banned_at } : u
       ))
       alert(`User berhasil ${isBanned ? 'dibuka ban' : 'diban'}!`)
@@ -253,37 +262,32 @@ export default function AdminPengaturanPage() {
     try {
       setSaving(true)
 
-      const profileDataToSave = {
-        user_id: user.id,
-        nama: profileData.nama,
-        hak_akses: profileData.hakAkses,
-        negara: profileData.negara,
-        kota: profileData.kota,
-        alamat: profileData.alamat,
-        email: profileData.email,
-        nomor_hp: profileData.nomorHp,
-        bahasa: profileData.bahasa,
-        zona_waktu: profileData.zonaWaktu,
-        foto_profil_url: profileData.fotoProfil || user.imageUrl
-      }
+      // Split nama into first_name and last_name
+      const nameParts = profileData.nama.trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
 
-      // Use upsert to create or update profile
-      const { data, error } = await supabase
-        .from('admin_profiles')
-        .upsert(profileDataToSave, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
+      // Update users table via API
+      const response = await fetch('/api/admin/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          updateData: {
+            first_name: firstName,
+            last_name: lastName,
+            email_address: profileData.email,
+            phone_number: profileData.nomorHp
+          }
         })
-        .select()
-        .single()
+      })
 
-      if (error) {
-        console.error('Error saving profile:', error)
-        alert('Gagal menyimpan profil: ' + error.message)
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Error saving profile:', result.error)
+        alert('Gagal menyimpan profil: ' + result.error)
       } else {
-        if (data) {
-          setProfileId(data.id)
-        }
         alert('Profil berhasil disimpan!')
       }
     } catch (error) {
@@ -318,7 +322,7 @@ export default function AdminPengaturanPage() {
         <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Pengaturan Profil</h1>
+            <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Pengaturan</h1>
             <p className="text-[#6a7282] text-base">Kelola profil dan preferensi akun Anda</p>
           </div>
 
@@ -423,7 +427,7 @@ export default function AdminPengaturanPage() {
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-[10px] text-[#6a7282]"
                     />
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="block text-xs text-[#6a7282] mb-2">Negara</label>
                     <input
                       type="text"
@@ -432,8 +436,8 @@ export default function AdminPengaturanPage() {
                       onChange={handleProfileChange}
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                     />
-                  </div>
-                  <div>
+                  </div> */}
+                  {/* <div>
                     <label className="block text-xs text-[#6a7282] mb-2">Kota</label>
                     <input
                       type="text"
@@ -442,17 +446,8 @@ export default function AdminPengaturanPage() {
                       onChange={handleProfileChange}
                       className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
                     />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs text-[#6a7282] mb-2">Alamat</label>
-                    <input
-                      type="text"
-                      name="alamat"
-                      value={profileData.alamat}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#009966]"
-                    />
-                  </div>
+                  </div> */}
+
                   <div>
                     <label className="block text-xs text-[#6a7282] mb-2">Email</label>
                     <input
@@ -475,7 +470,7 @@ export default function AdminPengaturanPage() {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">
-                  <button 
+                  <button
                     onClick={handleSaveProfile}
                     disabled={saving}
                     className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
@@ -577,7 +572,7 @@ export default function AdminPengaturanPage() {
                                 </div>
                                 <div>
                                   <p className="font-medium text-[#101828]">
-                                    {userData.first_name || userData.last_name 
+                                    {userData.first_name || userData.last_name
                                       ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
                                       : 'No Name'}
                                   </p>
@@ -624,11 +619,10 @@ export default function AdminPengaturanPage() {
                                 <button
                                   onClick={() => handleToggleAdmin(userData.id, userData.is_admin)}
                                   disabled={isCurrentUser || isUpdating}
-                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${
-                                    userData.is_admin
-                                      ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
-                                      : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'
-                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${userData.is_admin
+                                    ? 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
+                                    : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title={isCurrentUser ? 'Tidak dapat mengubah status admin sendiri' : ''}
                                 >
                                   {isUpdating ? (
@@ -640,15 +634,14 @@ export default function AdminPengaturanPage() {
                                   )}
                                   {userData.is_admin ? 'Cabut Admin' : 'Jadikan Admin'}
                                 </button>
-                                
+
                                 <button
                                   onClick={() => handleBanUser(userData.id, userData.banned_at)}
                                   disabled={isCurrentUser || isUpdating}
-                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${
-                                    isBanned
-                                      ? 'bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100'
-                                      : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
-                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-[10px] transition-colors ${isBanned
+                                    ? 'bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100'
+                                    : 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title={isCurrentUser ? 'Tidak dapat memban diri sendiri' : ''}
                                 >
                                   {isUpdating ? (

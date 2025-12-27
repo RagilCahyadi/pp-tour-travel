@@ -142,6 +142,14 @@ export default function RiwayatPesanan() {
     fetchBookings();
   }, [user?.id, isLoaded]);
 
+  // Check if Snap is already loaded
+  useEffect(() => {
+    if ((window as any).snap) {
+      setSnapReady(true);
+      console.log('RiwayatPesanan: Snap already available on mount');
+    }
+  }, []);
+
   // Filter bookings based on search and tab
   const filteredBookings = bookings.filter((booking) => {
     const searchLower = searchQuery.toLowerCase();
@@ -229,6 +237,34 @@ export default function RiwayatPesanan() {
           <div className="flex items-center gap-1.5 bg-yellow-100 px-3 py-1.5 rounded-full w-fit">
             <Clock className="w-3.5 h-3.5 text-yellow-600" />
             <span className="text-yellow-600 text-[12px]">Menunggu</span>
+          </div>
+        );
+    }
+  };
+
+  // Render booking status badge
+  const renderBookingStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+      case 'completed':
+        return (
+          <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full w-fit border border-blue-100">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <span className="text-blue-700 text-[12px] font-medium capitalize">{status}</span>
+          </div>
+        );
+      case 'cancelled':
+        return (
+          <div className="flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-full w-fit border border-red-100">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            <span className="text-red-700 text-[12px] font-medium capitalize">Cancelled</span>
+          </div>
+        );
+      default: // pending
+        return (
+          <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full w-fit border border-gray-100">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+            <span className="text-gray-700 text-[12px] font-medium capitalize">Pending</span>
           </div>
         );
     }
@@ -412,7 +448,7 @@ export default function RiwayatPesanan() {
         <AuthenticatedNavbar />
 
         <div className="pt-[96px] pb-20">
-          <div className="max-w-[1216px] mx-auto px-4">
+          <div className="max-w-[1280px] mx-auto px-4">
             {/* Back Button */}
             <Link href="/" className="flex items-center gap-2 text-[#4a5565] hover:text-[#00bc7d] mb-6 w-fit group">
               <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -561,41 +597,44 @@ export default function RiwayatPesanan() {
 
               {/* Table Content */}
               <div className="overflow-x-auto">
-                <div className="min-w-[1214px]">
+                <div className="min-w-[1280px]">
                   {/* Table Header */}
                   <div
                     className="border-b border-[#a4f4cf]"
                     style={{ backgroundImage: "linear-gradient(to right, #ecfdf5 0%, rgba(208,250,229,0.5) 100%)" }}
                   >
-                    <div className="grid grid-cols-[64px_183px_195px_165px_164px_141px_141px_161px] h-[56.5px] items-center">
-                      <div className="px-6">
+                    <div className="grid grid-cols-[50px_180px_160px_100px_150px_130px_130px_150px_160px] h-[56.5px] items-center">
+                      <div className="px-4">
                         {/* Empty header for radio column */}
                       </div>
-                      <div className="px-6 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         <MapPin className="w-4 h-4" />
                         Paket Tour
                       </div>
-                      <div className="px-6 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         <Calendar className="w-4 h-4" />
                         Keberangkatan
                       </div>
-                      <div className="px-6 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         <Users className="w-4 h-4" />
-                        Jumlah PAX
+                        PAX
                       </div>
-                      <div className="px-6 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         Nama Pemesan
                       </div>
-                      <div className="px-6 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         <Building2 className="w-4 h-4" />
                         Instansi
                       </div>
-                      <div className="px-6 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 flex items-center gap-2 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         <Phone className="w-4 h-4" />
                         Kontak
                       </div>
-                      <div className="px-6 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                      <div className="px-4 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
                         Status Bayar
+                      </div>
+                      <div className="px-4 text-[#364153] text-[12px] font-bold uppercase tracking-[0.6px]">
+                        Status Pesanan
                       </div>
                     </div>
                   </div>
@@ -625,10 +664,10 @@ export default function RiwayatPesanan() {
                         <div
                           key={booking.id}
                           onClick={() => handleSelectBooking(booking.id)}
-                          className={`grid grid-cols-[64px_183px_195px_165px_164px_141px_141px_161px] items-center border-b border-[#f3f4f6] hover:bg-[#f9fafb] transition-colors h-[72.5px] cursor-pointer ${selectedBookingId === booking.id ? 'bg-[#ecfdf5]' : ''
+                          className={`grid grid-cols-[50px_180px_160px_100px_150px_130px_130px_150px_160px] items-center border-b border-[#f3f4f6] hover:bg-[#f9fafb] transition-colors h-[72.5px] cursor-pointer ${selectedBookingId === booking.id ? 'bg-[#ecfdf5]' : ''
                             }`}
                         >
-                          <div className="px-6">
+                          <div className="px-4">
                             <input
                               type="radio"
                               name="booking-select"
@@ -637,7 +676,7 @@ export default function RiwayatPesanan() {
                               className="w-4 h-4 text-[#00bc7d] focus:ring-[#00bc7d]"
                             />
                           </div>
-                          <div className="px-6">
+                          <div className="px-4">
                             <div className="text-[#101828] text-[14px] font-normal mb-1">
                               {booking.tour_packages?.nama_paket || '-'}
                             </div>
@@ -645,25 +684,28 @@ export default function RiwayatPesanan() {
                               Kode: {booking.kode_booking}
                             </div>
                           </div>
-                          <div className="px-6 text-[#364153] text-[14px]">
+                          <div className="px-4 text-[#364153] text-[14px]">
                             {formatDate(booking.tanggal_keberangkatan)}
                           </div>
-                          <div className="px-6">
+                          <div className="px-4">
                             <span className="bg-[#d0fae5] text-[#007a55] px-3 py-1 rounded-full text-[14px]">
                               {booking.jumlah_pax}
                             </span>
                           </div>
-                          <div className="px-6 text-[#101828] text-[14px]">
+                          <div className="px-4 text-[#101828] text-[14px]">
                             {booking.customers?.nama_pelanggan || '-'}
                           </div>
-                          <div className="px-6 text-[#364153] text-[14px]">
+                          <div className="px-4 text-[#364153] text-[14px]">
                             {booking.customers?.nama_perusahaan || '-'}
                           </div>
-                          <div className="px-6 text-[#364153] text-[14px]">
+                          <div className="px-4 text-[#364153] text-[14px]">
                             {booking.customers?.nomor_telepon || '-'}
                           </div>
-                          <div className="px-6">
+                          <div className="px-4">
                             {renderPaymentBadge(booking.payments)}
+                          </div>
+                          <div className="px-4">
+                            {renderBookingStatusBadge(booking.status)}
                           </div>
                         </div>
                       ))

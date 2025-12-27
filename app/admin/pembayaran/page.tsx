@@ -36,32 +36,32 @@ export default function AdminPembayaranPage() {
       alert('Mohon berikan catatan verifikasi!')
       return
     }
-    
+
     if (!selectedPayment) {
       alert('Tidak ada pembayaran yang dipilih!')
       return
     }
-    
+
     try {
       // For now, use null for verified_by (allowed by schema: ON DELETE SET NULL)
       // This avoids auth session issues while still allowing payment verification
       const result = await verifyPayment(selectedPayment, null, verificationNote)
-      
+
       if (result.error) {
         throw new Error(result.error)
       }
-      
+
       // Close modal
       setIsVerifyModalOpen(false)
       setVerificationNote('')
       setSelectedPayment(null)
-      
+
       // Switch to "Semua" tab to show the verified payment
       // (If we stay on "Menunggu" tab, the verified payment will disappear from the list)
       setSelectedTab('all')
-      
+
       // Refresh data will happen automatically via useEffect when selectedTab changes
-      
+
       alert(`✅ Pembayaran berhasil diverifikasi!\n\n💡 Anda dipindahkan ke tab "Semua" untuk melihat pembayaran yang sudah diverifikasi.`)
     } catch (err: any) {
       console.error('Error verifying payment:', err)
@@ -74,31 +74,31 @@ export default function AdminPembayaranPage() {
       alert('Mohon berikan alasan penolakan!')
       return
     }
-    
+
     if (!selectedPayment) {
       alert('Tidak ada pembayaran yang dipilih!')
       return
     }
-    
+
     if (!confirm('Apakah Anda yakin ingin menolak pembayaran ini?')) {
       return
     }
-    
+
     try {
       const result = await rejectPayment(selectedPayment, null, verificationNote)
-      
+
       if (result.error) {
         throw new Error(result.error)
       }
-      
+
       // Close modal
       setIsVerifyModalOpen(false)
       setVerificationNote('')
       setSelectedPayment(null)
-      
+
       // Switch to "Semua" tab to show the rejected payment
       setSelectedTab('all')
-      
+
       alert(`✅ Pembayaran berhasil ditolak!\n\n💡 Anda dipindahkan ke tab "Semua" untuk melihat pembayaran yang ditolak.`)
     } catch (err: any) {
       console.error('Error rejecting payment:', err)
@@ -114,17 +114,17 @@ export default function AdminPembayaranPage() {
 
   const handleConfirmDelete = async () => {
     if (!selectedPayment) return
-    
+
     try {
       const result = await deletePayment(selectedPayment)
-      
+
       if (result.error) {
         throw new Error(result.error)
       }
-      
+
       setIsDeleteModalOpen(false)
       setSelectedPayment(null)
-      
+
       alert('✅ Pembayaran berhasil dihapus!')
     } catch (err: any) {
       console.error('Error deleting payment:', err)
@@ -134,15 +134,15 @@ export default function AdminPembayaranPage() {
 
   const filteredPayments = payments.filter(payment => {
     if (searchQuery === '') return true
-    
+
     const searchLower = searchQuery.toLowerCase()
     const customerName = payment.bookings.customers.nama_pelanggan?.toLowerCase() || ''
     const company = payment.bookings.customers.nama_perusahaan?.toLowerCase() || ''
     const bookingCode = payment.bookings.kode_booking?.toLowerCase() || ''
-    
-    return customerName.includes(searchLower) || 
-           company.includes(searchLower) || 
-           bookingCode.includes(searchLower)
+
+    return customerName.includes(searchLower) ||
+      company.includes(searchLower) ||
+      bookingCode.includes(searchLower)
   })
 
   // Pagination calculations
@@ -216,7 +216,7 @@ export default function AdminPembayaranPage() {
             </div>
 
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={handleDeleteClick}
                 className="bg-[#e7000b] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!selectedPayment}
@@ -244,77 +244,69 @@ export default function AdminPembayaranPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleTabChange('all')}
-                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
-                  selectedTab === 'all'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${selectedTab === 'all'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
                 <span className={selectedTab === 'all' ? 'font-semibold' : ''}>Semua Pembayaran</span>
-                <span className={`px-2.5 py-1 rounded-full text-sm ${
-                  selectedTab === 'all' ? 'bg-white/20 text-white' : 'bg-[#d0fae5] text-[#009966]'
-                }`}>
+                <span className={`px-2.5 py-1 rounded-full text-sm ${selectedTab === 'all' ? 'bg-white/20 text-white' : 'bg-[#d0fae5] text-[#009966]'
+                  }`}>
                   {stats.total}
                 </span>
               </button>
 
               <button
                 onClick={() => handleTabChange('verified')}
-                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
-                  selectedTab === 'verified'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${selectedTab === 'verified'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className={selectedTab === 'verified' ? 'font-semibold' : ''}>Sudah Dibayar</span>
-                <span className={`px-2.5 py-1 rounded-full text-sm ${
-                  selectedTab === 'verified' ? 'bg-white/20 text-white' : 'bg-[#d0fae5] text-[#009966]'
-                }`}>
+                <span className={`px-2.5 py-1 rounded-full text-sm ${selectedTab === 'verified' ? 'bg-white/20 text-white' : 'bg-[#d0fae5] text-[#009966]'
+                  }`}>
                   {stats.verified}
                 </span>
               </button>
 
               <button
                 onClick={() => handleTabChange('pending')}
-                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
-                  selectedTab === 'pending'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${selectedTab === 'pending'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className={selectedTab === 'pending' ? 'font-semibold' : ''}>Menunggu Verifikasi</span>
-                <span className={`px-2.5 py-1 rounded-full text-sm ${
-                  selectedTab === 'pending' ? 'bg-white/20 text-white' : 'bg-[#fef3c6] text-[#e17100]'
-                }`}>
+                <span className={`px-2.5 py-1 rounded-full text-sm ${selectedTab === 'pending' ? 'bg-white/20 text-white' : 'bg-[#fef3c6] text-[#e17100]'
+                  }`}>
                   {stats.pending}
                 </span>
               </button>
 
               <button
                 onClick={() => handleTabChange('rejected')}
-                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${
-                  selectedTab === 'rejected'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${selectedTab === 'rejected'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 <span className={selectedTab === 'rejected' ? 'font-semibold' : ''}>Ditolak</span>
-                <span className={`px-2.5 py-1 rounded-full text-sm ${
-                  selectedTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
-                }`}>
+                <span className={`px-2.5 py-1 rounded-full text-sm ${selectedTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                  }`}>
                   {stats.rejected}
                 </span>
               </button>
@@ -510,7 +502,7 @@ export default function AdminPembayaranPage() {
                 Menampilkan <span className="font-semibold">{startIndex + 1}-{Math.min(endIndex, filteredPayments.length)}</span> dari <span className="font-semibold">{filteredPayments.length}</span> pembayaran
               </p>
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -518,19 +510,18 @@ export default function AdminPembayaranPage() {
                   Previous
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button 
+                  <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      currentPage === page 
-                        ? 'bg-[#009966] text-white' 
-                        : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
+                      ? 'bg-[#009966] text-white'
+                      : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                      }`}
                   >
                     {page}
                   </button>
                 ))}
-                <button 
+                <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                   className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -586,167 +577,245 @@ export default function AdminPembayaranPage() {
       {isVerifyModalOpen && selectedPayment && (() => {
         const selectedPaymentData = payments.find(p => p.id === selectedPayment)
         if (!selectedPaymentData) return null
-        
+
         return (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[16px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] w-full max-w-[746px] relative max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-[#101828]">Verifikasi Pembayaran</h3>
-              <button 
-                onClick={() => setIsVerifyModalOpen(false)}
-                className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-[16px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] w-full max-w-[746px] relative max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-[#101828]">Verifikasi Pembayaran</h3>
+                <button
+                  onClick={() => setIsVerifyModalOpen(false)}
+                  className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            {/* Content */}
-            <div className="px-6 py-5 space-y-6">
-              {/* Two Column Grid */}
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  {/* Booking Code */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Kode Booking</label>
-                    <div className="inline-block bg-gray-100 px-3 py-1.5 rounded-[10px]">
-                      <span className="font-mono text-sm text-[#101828]">
-                        {selectedPaymentData.bookings.kode_booking}
-                      </span>
+              {/* Content */}
+              <div className="px-6 py-5 space-y-6">
+                {/* Two Column Grid */}
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                    {/* Booking Code */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Kode Booking</label>
+                      <div className="inline-block bg-gray-100 px-3 py-1.5 rounded-[10px]">
+                        <span className="font-mono text-sm text-[#101828]">
+                          {selectedPaymentData.bookings.kode_booking}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Customer Name */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Nama Pelanggan</label>
+                      <p className="text-base text-[#101828]">
+                        {selectedPaymentData.bookings.customers.nama_pelanggan}
+                      </p>
+                    </div>
+
+                    {/* Company */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Instansi</label>
+                      <p className="text-base text-[#101828]">
+                        {selectedPaymentData.bookings.customers.nama_perusahaan || '-'}
+                      </p>
+                    </div>
+
+                    {/* Package */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Paket Tour</label>
+                      <p className="text-base text-[#101828]">
+                        {selectedPaymentData.bookings.tour_packages.nama_paket}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Customer Name */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Nama Pelanggan</label>
-                    <p className="text-base text-[#101828]">
-                      {selectedPaymentData.bookings.customers.nama_pelanggan}
-                    </p>
-                  </div>
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    {/* Pax */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Jumlah Pax</label>
+                      <p className="text-base text-[#101828]">
+                        {selectedPaymentData.bookings.jumlah_pax} orang
+                      </p>
+                    </div>
 
-                  {/* Company */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Instansi</label>
-                    <p className="text-base text-[#101828]">
-                      {selectedPaymentData.bookings.customers.nama_perusahaan || '-'}
-                    </p>
-                  </div>
+                    {/* Total Cost */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Total Biaya</label>
+                      <p className="text-base text-[#101828]">
+                        {formatRupiah(selectedPaymentData.jumlah_pembayaran)}
+                      </p>
+                    </div>
 
-                  {/* Package */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Paket Tour</label>
-                    <p className="text-base text-[#101828]">
-                      {selectedPaymentData.bookings.tour_packages.nama_paket}
-                    </p>
+                    {/* Current Status */}
+                    <div>
+                      <label className="block text-sm text-[#6a7282] mb-1">Status Saat Ini</label>
+                      <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 border border-[#fee685] rounded-full">
+                        <svg className="w-4 h-4 text-[#bb4d00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm text-[#bb4d00]">Menunggu Verifikasi</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-4">
-                  {/* Pax */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Jumlah Pax</label>
-                    <p className="text-base text-[#101828]">
-                      {selectedPaymentData.bookings.jumlah_pax} orang
-                    </p>
-                  </div>
+                {/* Nota Pesanan Section */}
+                <div className="border-t border-gray-200 pt-6 space-y-3">
+                  <label className="block text-sm text-[#364153] font-semibold">Nota Pesanan</label>
 
-                  {/* Total Cost */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Total Biaya</label>
-                    <p className="text-base text-[#101828]">
-                      {formatRupiah(selectedPaymentData.jumlah_pembayaran)}
-                    </p>
-                  </div>
+                  {/* Invoice Preview Card */}
+                  <div className="bg-white border border-gray-200 rounded-[16px] overflow-hidden shadow-sm">
 
-                  {/* Current Status */}
-                  <div>
-                    <label className="block text-sm text-[#6a7282] mb-1">Status Saat Ini</label>
-                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 border border-[#fee685] rounded-full">
-                      <svg className="w-4 h-4 text-[#bb4d00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-sm text-[#bb4d00]">Menunggu Verifikasi</span>
+                    {/* Invoice Header */}
+                    <div className="bg-gradient-to-r from-[#00bc7c] to-[#3f3e2e] h-[70px] relative p-4 flex justify-between items-center">
+                      <div className="text-white z-10">
+                        <h1 className="text-[18px] font-bold mb-0.5">PP Tour Travel</h1>
+                        <p className="text-[10px] opacity-90">Wujudkan Petualangan Impian Anda</p>
+                      </div>
+                      <div className="bg-white/20 border border-white/30 rounded-[10px] px-3 py-1.5 backdrop-blur-sm z-10">
+                        <p className="text-[#c6d2ff] text-[8px] mb-0.5">Kode Pesanan</p>
+                        <p className="text-white text-[13px] tracking-wider font-medium">{selectedPaymentData.bookings.kode_booking}</p>
+                      </div>
+                      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+                    </div>
+
+                    {/* Invoice Body */}
+                    <div className="p-4 space-y-4">
+
+                      {/* Detail Paket */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[8px] bg-gradient-to-br from-[#00bc7d] to-[#009966] flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-[#101828] text-[13px] font-bold">Detail Paket</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">🎒 Paket</span>
+                            <span className="text-[#101828] font-medium">{selectedPaymentData.bookings.tour_packages.nama_paket}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">📅 Tanggal</span>
+                            <span className="text-[#101828] font-medium">
+                              {selectedPaymentData.bookings.tanggal_keberangkatan
+                                ? new Date(selectedPaymentData.bookings.tanggal_keberangkatan).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })
+                                : '-'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">👥 Jumlah</span>
+                            <span className="text-[#101828] font-medium">{selectedPaymentData.bookings.jumlah_pax} orang</span>
+                          </div>
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">💳 Status</span>
+                            <span className={`font-medium ${selectedPaymentData.status === 'verified' ? 'text-green-600' : 'text-amber-600'}`}>
+                              {selectedPaymentData.status === 'verified' ? 'Sudah Dibayar' : 'Menunggu'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-dashed border-gray-200" />
+
+                      {/* Customer Info */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-[8px] bg-gradient-to-br from-[#2b7fff] to-[#155dfc] flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-[#101828] text-[13px] font-bold">Info Pemesan</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">👨 Nama</span>
+                            <span className="text-[#101828] font-medium">{selectedPaymentData.bookings.customers.nama_pelanggan}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">🏢 Instansi</span>
+                            <span className="text-[#101828] font-medium">{selectedPaymentData.bookings.customers.nama_perusahaan || '-'}</span>
+                          </div>
+                          <div className="flex">
+                            <span className="w-[90px] text-[#6a7282]">📱 Telepon</span>
+                            <span className="text-[#101828] font-medium">{selectedPaymentData.bookings.customers.nomor_telepon || '-'}</span>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Total Payment */}
+                      <div className="bg-gradient-to-r from-[#fffbeb] to-[#fef3c6] border border-[#ffb900] rounded-[10px] p-3 flex justify-between items-center">
+                        <span className="text-[#973c00] text-[11px] uppercase tracking-wider font-bold">💰 Total Pembayaran</span>
+                        <span className="text-[#7b3306] text-[18px] font-extrabold">{formatRupiah(selectedPaymentData.jumlah_pembayaran)}</span>
+                      </div>
+                    </div>
+
+                    {/* Invoice Footer */}
+                    <div className="bg-gradient-to-r from-[#1e2939] to-[#101828] h-[40px] flex items-center justify-center">
+                      <p className="text-[#6a7282] text-[9px]">© 2025 PP Tour Travel. All rights reserved.</p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Bukti Pembayaran Section */}
-              <div className="border-t border-gray-200 pt-6 space-y-3">
-                <label className="block text-sm text-[#364153]">Bukti Pembayaran</label>
-                <div className="bg-gray-50 border-2 border-[#d1d5dc] rounded-[16.4px] p-7">
-                  <div className="flex items-center gap-4">
-                    {/* File Icon */}
-                    <div className="w-12 h-12 bg-[#d0fae5] rounded-[10px] flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-[#009966]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    
-                    {/* File Info */}
-                    <div className="flex-1">
-                      <p className="text-base text-[#101828]">bukti_transfer_{selectedPaymentData.bookings.customers.nama_pelanggan?.toLowerCase().replace(/\s+/g, '_')}.jpg</p>
-                      <p className="text-base text-[#6a7282]">Sudah diupload</p>
-                    </div>
-
-                    {/* View Button */}
-                    {selectedPaymentData.bukti_pembayaran_url && (
-                      <a
-                        href={selectedPaymentData.bukti_pembayaran_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-[#009966] text-white text-sm rounded-[10px] hover:opacity-90 transition-opacity"
-                      >
-                        Lihat Bukti
-                      </a>
-                    )}
-                  </div>
+                {/* Verification Note */}
+                <div className="space-y-2">
+                  <label className="block text-sm text-[#364153]">Catatan (Wajib diisi)</label>
+                  <textarea
+                    value={verificationNote}
+                    onChange={(e) => setVerificationNote(e.target.value)}
+                    placeholder="Contoh: Transfer sudah masuk, nominal sesuai (untuk verifikasi) atau Bukti transfer tidak valid (untuk penolakan)"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-[10px] text-sm text-[#101828] placeholder:text-[rgba(16,24,40,0.5)] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:border-transparent resize-none"
+                    rows={3}
+                  />
                 </div>
               </div>
 
-              {/* Verification Note */}
-              <div className="space-y-2">
-                <label className="block text-sm text-[#364153]">Catatan (Wajib diisi)</label>
-                <textarea
-                  value={verificationNote}
-                  onChange={(e) => setVerificationNote(e.target.value)}
-                  placeholder="Contoh: Transfer sudah masuk, nominal sesuai (untuk verifikasi) atau Bukti transfer tidak valid (untuk penolakan)"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-[10px] text-sm text-[#101828] placeholder:text-[rgba(16,24,40,0.5)] focus:outline-none focus:ring-2 focus:ring-[#009966] focus:border-transparent resize-none"
-                  rows={3}
-                />
+              {/* Footer */}
+              <div className="border-t border-gray-200 px-6 py-[17px] flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setIsVerifyModalOpen(false)}
+                  className="px-6 py-2.5 bg-gray-100 text-[#364153] text-base rounded-[16.4px] hover:bg-gray-200 transition-colors h-11"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleRejectPayment}
+                  className="px-6 py-2.5 bg-[#e7000b] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity h-11"
+                >
+                  Tolak
+                </button>
+                <button
+                  onClick={handleConfirmVerify}
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity flex items-center gap-2 h-11"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Verifikasi & Setujui</span>
+                </button>
               </div>
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-gray-200 px-6 py-[17px] flex items-center justify-end gap-3">
-              <button
-                onClick={() => setIsVerifyModalOpen(false)}
-                className="px-6 py-2.5 bg-gray-100 text-[#364153] text-base rounded-[16.4px] hover:bg-gray-200 transition-colors h-11"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleRejectPayment}
-                className="px-6 py-2.5 bg-[#e7000b] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity h-11"
-              >
-                Tolak
-              </button>
-              <button
-                onClick={handleConfirmVerify}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white text-base rounded-[16.4px] hover:opacity-90 transition-opacity flex items-center gap-2 h-11"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Verifikasi & Setujui</span>
-              </button>
             </div>
           </div>
-        </div>
         )
       })()}
     </div>

@@ -84,6 +84,15 @@ export function OrderForm({
     fetchUserData()
   }, [user])
 
+  // Check if Snap is already loaded (e.g. from previous navigation)
+  React.useEffect(() => {
+    if ((window as any).snap) {
+      setSnapReady(true)
+      console.log('OrderForm: Snap already available on mount')
+    }
+  }, [])
+
+
   // Format currency helper
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {

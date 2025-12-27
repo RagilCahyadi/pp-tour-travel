@@ -133,6 +133,28 @@ export function useBookings(statusFilter?: string) {
         .eq('id', id)
 
       if (error) throw error
+
+      // If status is 'confirmed', automatically create a schedule via API
+      if (status === 'confirmed') {
+        try {
+          const response = await fetch('/api/schedule/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bookingId: id }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            console.error('Error creating schedule:', result.error);
+          } else {
+            console.log('Schedule created successfully:', result);
+          }
+        } catch (scheduleErr) {
+          console.error('Error calling schedule API:', scheduleErr);
+        }
+      }
+
       await fetchBookings()
       return { error: null }
     } catch (err: any) {
