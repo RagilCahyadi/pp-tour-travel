@@ -11,6 +11,7 @@ import AuthInput from '@/components/auth/AuthInput'
 interface FormErrors {
   firstName?: string
   lastName?: string
+  username?: string
   email?: string
   phone?: string
   password?: string
@@ -21,6 +22,7 @@ interface FormErrors {
 interface Touched {
   firstName?: boolean
   lastName?: boolean
+  username?: boolean
   email?: boolean
   phone?: boolean
   password?: boolean
@@ -37,6 +39,7 @@ export default function SignUpPage() {
   const { isSignedIn } = useUser()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -150,6 +153,7 @@ export default function SignUpPage() {
         password,
         firstName,
         lastName,
+        username,
         unsafeMetadata: { phone_number: phone },
       })
 
@@ -202,7 +206,7 @@ export default function SignUpPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isLoaded) return
+    if (!isLoaded || !signUp) return
 
     const code = otpCode.join('')
     if (code.length !== 6) {
@@ -214,23 +218,99 @@ export default function SignUpPage() {
     setOtpErrors({})
 
     try {
+      // Attempt email verification with the code
       const result = await signUp.attemptEmailAddressVerification({ code })
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId })
+
+      // Detailed logging to understand the state
+      console.log('=== VERIFICATION RESULT ===')
+      console.log('Result object:', result)
+      console.log('Result status:', result?.status)
+      console.log('Result createdSessionId:', result?.createdSessionId)
+      console.log('signUp.status:', signUp.status)
+      console.log('signUp.createdSessionId:', signUp.createdSessionId)
+      console.log('signUp.verifications:', signUp.verifications)
+      console.log('signUp.missingFields:', signUp.missingFields)
+      console.log('signUp.unverifiedFields:', signUp.unverifiedFields)
+      console.log('=== END VERIFICATION RESULT ===')
+
+      // Check if verification returned complete status
+      if (result?.status === 'complete') {
+        if (result.createdSessionId) {
+          await setActive({ session: result.createdSessionId })
+          try {
+            await fetch('/api/user/sync', { method: 'POST' })
+          } catch (syncErr) {
+            console.error('Sync error:', syncErr)
+          }
+        }
         router.push('/')
+        return
       }
+
+      // Fallback: check signUp object directly
+      if (signUp.status === 'complete') {
+        if (signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId })
+          try {
+            await fetch('/api/user/sync', { method: 'POST' })
+          } catch (syncErr) {
+            console.error('Sync error:', syncErr)
+          }
+        }
+        router.push('/')
+        return
+      }
+
+      // If email is verified but status is still missing_requirements
+      // This means there might be other requirements (CAPTCHA, phone, etc.)
+      const emailVerification = signUp.verifications?.emailAddress
+      if (emailVerification?.status === 'verified') {
+        console.log('Email is verified but sign-up not complete. Missing fields:', signUp.missingFields)
+        // Try to force complete by setting session if available
+        if (signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId })
+          router.push('/')
+          return
+        }
+      }
+
+      // If not complete, show error with details
+      console.log('Sign-up not complete, status:', signUp.status)
+      console.log('Missing fields:', signUp.missingFields)
+      setOtpErrors({ general: 'Verifikasi belum selesai. Silakan coba lagi.' })
+
     } catch (err: any) {
+      console.error('Verification error:', err)
       const errorCode = err.errors?.[0]?.code
+      const errorMessage = err.errors?.[0]?.message || ''
+
+      // Handle "already verified" - the user exists, redirect to login
+      if (errorCode === 'verification_already_verified') {
+        // Check if we have a session to set
+        if (signUp.status === 'complete' && signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId })
+          try {
+            await fetch('/api/user/sync', { method: 'POST' })
+          } catch (syncErr) {
+            console.error('Sync error:', syncErr)
+          }
+          router.push('/')
+        } else {
+          // No session available, redirect to login
+          router.push('/login')
+        }
+        return
+      }
+
       if (errorCode === 'form_code_incorrect') {
         setOtpErrors({ code: 'Kode verifikasi salah' })
       } else if (errorCode === 'verification_expired') {
-        setOtpErrors({ general: 'Kode sudah kadaluarsa.' })
+        setOtpErrors({ general: 'Kode sudah kadaluarsa. Silakan kirim ulang.' })
       } else {
-        setOtpErrors({ general: err.errors?.[0]?.message || 'Verifikasi gagal' })
+        setOtpErrors({ general: errorMessage || 'Verifikasi gagal' })
       }
-    } finally {
-      setIsVerifying(false)
     }
+    setIsVerifying(false)
   }
 
   const handleResendCode = async () => {
@@ -327,9 +407,6 @@ export default function SignUpPage() {
   // Registration Form
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
-      {/* Clerk CAPTCHA Element */}
-      <div id="clerk-captcha" className="hidden"></div>
-
       <div className="fixed inset-0 -z-10">
         <Image src="/background-login.webp" alt="Background" fill className="object-cover" priority />
       </div>
@@ -376,6 +453,18 @@ export default function SignUpPage() {
                 disabled={isLoading}
               />
             </div>
+
+            <AuthInput
+              label="Username"
+              type="text"
+              icon={User}
+              placeholder="username_anda"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onBlur={() => setTouched(prev => ({ ...prev, username: true }))}
+              error={errors.username}
+              disabled={isLoading}
+            />
 
             <AuthInput
               label="Email"

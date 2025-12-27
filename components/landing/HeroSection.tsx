@@ -83,7 +83,7 @@ export default function HeroSection() {
             <div 
               className={`flex flex-wrap gap-4 mb-12 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
-              <Link href="#paket-tour">
+              <Link href="paket-tour">
                 <Button
                   size="lg"
                   className="group bg-gradient-to-r from-[#00bc7d] to-[#009966] hover:from-[#00a870] hover:to-[#007a55] text-white px-8 h-14 text-base rounded-xl shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105"

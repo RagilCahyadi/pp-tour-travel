@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Mail, Lock, LogIn } from 'lucide-react'
 import AuthInput from '@/components/auth/AuthInput'
+import { supabase } from '@/lib/supabase'
 
 interface FormErrors {
   identifier?: string
@@ -71,6 +72,24 @@ export default function LoginPage() {
     try {
       const result = await signIn.create({ identifier, password })
       if (result.status === 'complete') {
+        // Check if user is banned before setting active session
+        // Query by email or username
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('banned_at')
+          .or(`email_address.eq."${identifier}",username.eq."${identifier}"`)
+          .maybeSingle()
+
+        console.log('Ban check - userData:', userData, 'error:', userError)
+
+        if (userData?.banned_at) {
+          // User is banned, show error and don't set session
+          console.log('User is banned, banned_at:', userData.banned_at)
+          setErrors({ general: 'Akun Anda telah diblokir. Hubungi admin untuk informasi lebih lanjut.' })
+          setIsLoading(false)
+          return
+        }
+
         await setActive({ session: result.createdSessionId })
         router.push('/')
       }

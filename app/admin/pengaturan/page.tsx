@@ -634,7 +634,7 @@ export default function AdminPengaturanPage() {
                                   )}
                                   {userData.is_admin ? 'Cabut Admin' : 'Jadikan Admin'}
                                 </button>
-
+{/* 
                                 <button
                                   onClick={() => handleBanUser(userData.id, userData.banned_at)}
                                   disabled={isCurrentUser || isUpdating}
@@ -652,7 +652,7 @@ export default function AdminPengaturanPage() {
                                     </svg>
                                   )}
                                   {isBanned ? 'Unban' : 'Ban User'}
-                                </button>
+                                </button> */}
                               </div>
                             </td>
                           </tr>
