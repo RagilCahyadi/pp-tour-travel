@@ -16,6 +16,9 @@ interface UserWebhookEvent {
     first_name?: string | null;
     last_name?: string | null;
     image_url?: string | null;
+    unsafe_metadata?: {
+      phone_number?: string;
+    };
   };
 }
 
@@ -58,13 +61,15 @@ export async function POST(req: Request) {
 
     switch (eventType) {
       case 'user.created': {
+        const phoneNumber = user.unsafe_metadata?.phone_number || null
         const { error } = await supabase.from('users').insert({
           id: user.id,
           email_address: email,
           username: user.username || null,
           first_name: user.first_name || null,
           last_name: user.last_name || null,
-          profile_image_url: user.image_url || null
+          profile_image_url: user.image_url || null,
+          phone_number: phoneNumber
         })
         if (error) {
           console.error('Insert error:', error)
@@ -75,6 +80,7 @@ export async function POST(req: Request) {
       }
 
       case 'user.updated': {
+        const phoneNumber = user.unsafe_metadata?.phone_number || null
         const { error } = await supabase
           .from('users')
           .update({
@@ -82,12 +88,13 @@ export async function POST(req: Request) {
             username: user.username || null,
             first_name: user.first_name || null,
             last_name: user.last_name || null,
-            profile_image_url: user.image_url || null
+            profile_image_url: user.image_url || null,
+            phone_number: phoneNumber
           })
           .eq('id', user.id)
         if (error) {
           console.error('Update error:', error)
-          return new Response('Database error', { status: 500})
+          return new Response('Database error', { status: 500 })
         }
         console.log('User updated:', user)
         break

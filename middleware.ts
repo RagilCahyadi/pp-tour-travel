@@ -4,6 +4,8 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/login(.*)',
   '/sign-up(.*)',
+  '/forgot-password(.*)',
+  '/reset-password(.*)',
   '/api/webhooks(.*)',
 ]);
 
@@ -17,7 +19,7 @@ export default clerkMiddleware(async (auth, request) => {
   if (isAdminRoute(request)) {
     await auth.protect();
   }
-  
+
   // Protect other non-public routes
   if (!isPublicRoute(request) && !isAdminRoute(request)) {
     await auth.protect();

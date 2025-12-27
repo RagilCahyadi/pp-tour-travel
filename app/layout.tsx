@@ -33,13 +33,13 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${poppins.variable} ${volkhov.variable} ${inter.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`${poppins.variable} ${volkhov.variable} ${inter.variable} antialiased`}
+        >
+          {children}
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
