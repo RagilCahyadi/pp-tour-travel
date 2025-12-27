@@ -143,7 +143,7 @@ function PackageCard({ package: pkg }: PackageCardProps) {
           </div>
 
           <Link
-            href={`/paket-tour/${pkg.id}`}
+            href={`/detail/${pkg.id}`}
             className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-2xl hover:shadow-lg transition-all duration-300 group"
           >
             <span>Lihat Detail</span>

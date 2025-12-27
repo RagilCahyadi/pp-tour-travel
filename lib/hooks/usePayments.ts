@@ -117,7 +117,7 @@ export function usePayments(statusFilter?: string) {
         .select()
 
       if (error) throw error
-      
+
       await fetchPayments()
       return { error: null }
     } catch (err: any) {
@@ -140,7 +140,7 @@ export function usePayments(statusFilter?: string) {
         .select()
 
       if (error) throw error
-      
+
       await fetchPayments()
       return { error: null }
     } catch (err: any) {
@@ -157,7 +157,7 @@ export function usePayments(statusFilter?: string) {
         .eq('id', id)
 
       if (error) throw error
-      
+
       await fetchPayments()
       return { error: null }
     } catch (err: any) {

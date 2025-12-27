@@ -249,6 +249,27 @@ export default function RiwayatPesanan() {
 
     setIsPaymentLoading(true);
 
+    // Helper function to update payment status to verified via API
+    const updatePaymentToVerified = async (bookingId: string) => {
+      try {
+        const response = await fetch('/api/payment/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          console.error('Error updating payment status:', result.error);
+        } else {
+          console.log('Payment status updated to verified:', result);
+        }
+      } catch (err) {
+        console.error('Error updating payment:', err);
+      }
+    };
+
     try {
       // Check if there's an existing snap token
       const existingPayment = selectedBooking.payments.find(p => p.snap_token);
@@ -256,19 +277,24 @@ export default function RiwayatPesanan() {
       if (existingPayment?.snap_token) {
         // Use existing snap token
         window.snap.pay(existingPayment.snap_token, {
-          onSuccess: function (result) {
+          onSuccess: async function (result) {
             console.log('Payment success:', result);
+            // Update payment status to verified
+            await updatePaymentToVerified(selectedBooking.id);
             alert('Pembayaran berhasil!');
             fetchBookings();
+            setIsPaymentLoading(false);
           },
           onPending: function (result) {
             console.log('Payment pending:', result);
             alert('Menunggu pembayaran');
             fetchBookings();
+            setIsPaymentLoading(false);
           },
           onError: function (result) {
             console.log('Payment error:', result);
             alert('Pembayaran gagal');
+            setIsPaymentLoading(false);
           },
           onClose: function () {
             console.log('Payment popup closed');
@@ -292,19 +318,24 @@ export default function RiwayatPesanan() {
         }
 
         window.snap.pay(data.token, {
-          onSuccess: function (result) {
+          onSuccess: async function (result) {
             console.log('Payment success:', result);
+            // Update payment status to verified
+            await updatePaymentToVerified(selectedBooking.id);
             alert('Pembayaran berhasil!');
             fetchBookings();
+            setIsPaymentLoading(false);
           },
           onPending: function (result) {
             console.log('Payment pending:', result);
             alert('Menunggu pembayaran');
             fetchBookings();
+            setIsPaymentLoading(false);
           },
           onError: function (result) {
             console.log('Payment error:', result);
             alert('Pembayaran gagal');
+            setIsPaymentLoading(false);
           },
           onClose: function () {
             console.log('Payment popup closed');
@@ -426,8 +457,8 @@ export default function RiwayatPesanan() {
                     variant="ghost"
                     onClick={() => setActiveTab("semua")}
                     className={`rounded-[10px] px-4 h-9 text-[14px] font-normal ${activeTab === "semua"
-                        ? "bg-white shadow-sm text-[#009966]"
-                        : "text-[#4a5565] hover:text-[#009966]"
+                      ? "bg-white shadow-sm text-[#009966]"
+                      : "text-[#4a5565] hover:text-[#009966]"
                       }`}
                   >
                     Semua
@@ -436,8 +467,8 @@ export default function RiwayatPesanan() {
                     variant="ghost"
                     onClick={() => setActiveTab("menunggu")}
                     className={`rounded-[10px] px-4 h-9 text-[14px] font-normal ${activeTab === "menunggu"
-                        ? "bg-white shadow-sm text-[#009966]"
-                        : "text-[#4a5565] hover:text-[#009966]"
+                      ? "bg-white shadow-sm text-[#009966]"
+                      : "text-[#4a5565] hover:text-[#009966]"
                       }`}
                   >
                     Menunggu
@@ -446,8 +477,8 @@ export default function RiwayatPesanan() {
                     variant="ghost"
                     onClick={() => setActiveTab("terkonfirmasi")}
                     className={`rounded-[10px] px-4 h-9 text-[14px] font-normal ${activeTab === "terkonfirmasi"
-                        ? "bg-white shadow-sm text-[#009966]"
-                        : "text-[#4a5565] hover:text-[#009966]"
+                      ? "bg-white shadow-sm text-[#009966]"
+                      : "text-[#4a5565] hover:text-[#009966]"
                       }`}
                   >
                     Terkonfirmasi
