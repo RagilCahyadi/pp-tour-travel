@@ -748,15 +748,15 @@ export default function AdminPaketPage() {
 
               {/* Pagination */}
               {filteredPackages.length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-md px-6 py-4 flex items-center justify-between">
-                  <p className="text-[#4a5565] text-base">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-md px-4 md:px-6 py-4 flex items-center justify-between">
+                  <p className="text-[#4a5565] text-sm md:text-base">
                     Menampilkan <span className="font-semibold">{startIndex + 1}-{Math.min(endIndex, filteredPackages.length)}</span> dari <span className="font-semibold">{filteredPackages.length}</span> paket
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 md:gap-2">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 md:px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] text-sm md:text-base hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -764,7 +764,7 @@ export default function AdminPaketPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
+                        className={`px-3 md:px-4 py-2 rounded-lg text-sm md:text-base transition-colors ${currentPage === page
                           ? 'bg-[#009966] text-white'
                           : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
                           }`}
@@ -775,7 +775,7 @@ export default function AdminPaketPage() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
-                      className="px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 md:px-6 py-2 bg-white border border-gray-200 rounded-lg text-[#364153] text-sm md:text-base hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>
