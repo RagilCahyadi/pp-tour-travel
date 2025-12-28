@@ -84,7 +84,7 @@ export default function TestimonialsSection() {
       <div className="absolute top-20 right-10 w-96 h-96 bg-emerald-100/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block bg-gradient-to-r from-emerald-50 to-blue-50 px-4 py-2 rounded-full mb-6">
@@ -104,13 +104,12 @@ export default function TestimonialsSection() {
         {/* Testimonials Container */}
         <div className="relative">
           {/* Testimonials Grid */}
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
             {visibleTestimonials.map((testimonial, index) => (
               <div
                 key={`${testimonial.originalIndex}-${index}`}
-                className={`bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 animate-fadeIn ${
-                  index === 1 ? "md:scale-105 border-emerald-200" : ""
-                }`}
+                className={`bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 animate-fadeIn ${index === 1 ? "md:scale-105 border-emerald-200" : ""
+                  }`}
               >
                 {/* Quote Icon */}
                 <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-[#00bc7d] to-[#009966] rounded-2xl shadow-lg flex items-center justify-center">
@@ -165,11 +164,10 @@ export default function TestimonialsSection() {
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex
+                className={`transition-all duration-300 rounded-full ${index === currentIndex
                     ? "w-8 h-2 bg-[#009966]"
                     : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-                }`}
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
@@ -194,7 +192,7 @@ export default function TestimonialsSection() {
 
         {/* Stats Banner */}
         <div className="bg-gradient-to-r from-[#00bc7d] to-[#009966] rounded-3xl shadow-2xl p-8">
-          <div className="grid grid-cols-3 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 text-center">
             <div>
               <div className="text-5xl font-bold text-white mb-2">4.9</div>
               <div className="flex items-center justify-center gap-1 mb-2">

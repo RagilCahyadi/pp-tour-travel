@@ -47,10 +47,10 @@ export default function AdminPenjadwalanPage() {
   }
 
   const filteredSchedules = schedules.filter(schedule => {
-    const matchesSearch = searchQuery === '' || 
-                         (schedule.nama_instansi?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                         schedule.tour_packages.nama_paket.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         schedule.kode_jadwal.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = searchQuery === '' ||
+      (schedule.nama_instansi?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      schedule.tour_packages.nama_paket.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      schedule.kode_jadwal.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesSearch
   })
 
@@ -85,7 +85,7 @@ export default function AdminPenjadwalanPage() {
 
   const handleEditSchedule = (scheduleId: string) => {
     setIsModalOpen(true)
-    
+
     if (scheduleId) {
       const schedule = schedules.find(s => s.id === scheduleId)
       if (schedule) {
@@ -167,7 +167,7 @@ export default function AdminPenjadwalanPage() {
 
   const handleConfirmDelete = async () => {
     if (!selectedSchedule) return
-    
+
     const { error } = await deleteSchedule(selectedSchedule)
     if (error) {
       alert('Gagal menghapus jadwal: ' + error)
@@ -278,7 +278,7 @@ export default function AdminPenjadwalanPage() {
     }
 
     // Get selected schedule data
-    const selectedData = schedules.filter(schedule => 
+    const selectedData = schedules.filter(schedule =>
       schedule.id === selectedSchedule
     )
 
@@ -400,59 +400,59 @@ export default function AdminPenjadwalanPage() {
       <AdminSidebar activePage="penjadwalan" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen overflow-auto">
-        <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen overflow-auto">
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Kelola Penjadwalan</h1>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight mb-1">Kelola Penjadwalan</h1>
               <p className="text-[#6a7282] text-base">Kelola jadwal keberangkatan paket tour</p>
             </div>
 
-            <div className="flex gap-3">
-              <button 
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              <button
                 onClick={handleDeleteClick}
                 disabled={!selectedSchedule}
-                className="flex items-center gap-2 px-5 py-3 bg-[#e7000b] text-white rounded-[16.4px] hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 bg-[#e7000b] text-white rounded-[16.4px] hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                <span>Hapus</span>
+                <span className="hidden sm:inline">Hapus</span>
               </button>
 
-              <button 
+              <button
                 onClick={handleExportPDF}
                 disabled={!selectedSchedule}
-                className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 bg-white border border-gray-200 rounded-[16.4px] shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span className="text-[#364153]">Export PDF</span>
+                <span className="hidden sm:inline text-[#364153]">Export PDF</span>
               </button>
 
-              <button 
+              <button
                 onClick={handleExportAllPDF}
                 disabled={schedules.length === 0}
-                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#009966] to-[#00CC88] text-white rounded-[16.4px] shadow-sm hover:from-[#008855] hover:to-[#00BB77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 bg-gradient-to-r from-[#009966] to-[#00CC88] text-white rounded-[16.4px] shadow-sm hover:from-[#008855] hover:to-[#00BB77] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span>Export Semua</span>
+                <span className="hidden sm:inline">Export Semua</span>
               </button>
-              
-              <button 
+
+              <button
                 onClick={handleOpenModal}
-                className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
+                className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[16.4px] hover:opacity-90 transition-opacity">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Kelola Jadwal</span>
+                <span className="hidden sm:inline">Kelola Jadwal</span>
               </button>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
             <div className="bg-white border border-gray-100 rounded-[16.4px] p-5 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
@@ -608,7 +608,7 @@ export default function AdminPenjadwalanPage() {
                 <span> jadwal</span>
               </div>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                   className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -616,19 +616,18 @@ export default function AdminPenjadwalanPage() {
                   Previous
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button 
+                  <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-2 rounded-[10px] font-medium transition-colors ${
-                      currentPage === page 
-                        ? 'bg-[#009966] text-white' 
-                        : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
-                    }`}
+                    className={`px-3 py-2 rounded-[10px] font-medium transition-colors ${currentPage === page
+                      ? 'bg-[#009966] text-white'
+                      : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                      }`}
                   >
                     {page}
                   </button>
                 ))}
-                <button 
+                <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 bg-white border border-gray-200 rounded-[10px] text-[#364153] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -650,7 +649,7 @@ export default function AdminPenjadwalanPage() {
               <h3 className="text-xl font-semibold text-[#101828]">
                 {selectedSchedule ? 'Edit Penjadwalan' : 'Tambah Penjadwalan'}
               </h3>
-              <button 
+              <button
                 onClick={handleCloseModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -787,7 +786,7 @@ export default function AdminPenjadwalanPage() {
 
             {/* Modal Footer */}
             <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
-              <button 
+              <button
                 onClick={handleSubmit}
                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white rounded-[10px] hover:opacity-90 transition-opacity">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

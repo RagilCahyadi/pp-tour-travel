@@ -466,7 +466,7 @@ export default function RiwayatPesanan() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-[40px] font-bold text-[#101828] leading-[48px] font-['Inter']">
+                <h1 className="text-[28px] md:text-[40px] font-bold text-[#101828] leading-tight md:leading-[48px] font-['Inter']">
                   Riwayat Pemesanan
                 </h1>
                 <p className="text-[#4a5565] text-[16px] leading-[25.6px] font-['Inter']">
@@ -476,9 +476,9 @@ export default function RiwayatPesanan() {
             </div>
 
             {/* Search and Filter Bar */}
-            <div className="bg-white border border-[#f3f4f6] rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-[25px] mb-8 h-[100px] flex items-center">
-              <div className="flex items-center justify-between w-full gap-4">
-                <div className="relative flex-1 max-w-[837px]">
+            <div className="bg-white border border-[#f3f4f6] rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-4 md:p-[25px] mb-8 flex items-center">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between w-full gap-3 md:gap-4">
+                <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[rgba(10,10,10,0.5)]" />
                   <Input
                     placeholder="Cari berdasarkan paket, kode booking, atau nama pemesan..."
@@ -525,10 +525,10 @@ export default function RiwayatPesanan() {
 
             {/* Stats Cards */}
             <div
-              className="rounded-[16px] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] mb-8 overflow-hidden h-[116px]"
+              className="rounded-[16px] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] mb-8 overflow-hidden"
               style={{ backgroundImage: "linear-gradient(to right, #00bc7d 0%, #009966 100%)" }}
             >
-              <div className="grid grid-cols-3 divide-x divide-[rgba(0,212,146,0.3)] h-full">
+              <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[rgba(0,212,146,0.3)] h-full">
                 <div className="p-6 flex flex-col items-center justify-center gap-2">
                   <div className="text-[36px] font-normal text-white leading-[40px]">{totalBookings}</div>
                   <div className="text-[#ecfdf5] text-[14px] leading-[20px]">Total Pesanan</div>
@@ -549,46 +549,46 @@ export default function RiwayatPesanan() {
 
               {/* Action Bar */}
               {selectedBookingId && (
-                <div className="bg-gradient-to-r from-[#f9fafb] to-[rgba(243,244,246,0.5)] border-b border-[#e5e7eb] px-6 py-4">
-                  <div className="flex items-center justify-between">
+                <div className="bg-gradient-to-r from-[#f9fafb] to-[rgba(243,244,246,0.5)] border-b border-[#e5e7eb] px-4 md:px-6 py-3 md:py-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                     <div className="bg-[#d0fae5] px-3 py-1.5 rounded-full">
                       <span className="text-[#007a55] text-[14px] font-normal">
                         1 pesanan dipilih
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         onClick={() => setIsEditDialogOpen(true)}
-                        className="bg-[#2b7fff] hover:bg-[#1e5fd9] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                        className="bg-[#2b7fff] hover:bg-[#1e5fd9] text-white rounded-[10px] px-3 md:px-4 h-9 md:h-10 flex items-center gap-1 md:gap-2 text-[13px] md:text-[14px] font-normal"
                       >
                         <Edit className="w-4 h-4" />
-                        Edit
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                       <Button
                         onClick={() => setIsDeleteDialogOpen(true)}
-                        className="bg-[#fb2c36] hover:bg-[#d91f28] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                        className="bg-[#fb2c36] hover:bg-[#d91f28] text-white rounded-[10px] px-3 md:px-4 h-9 md:h-10 flex items-center gap-1 md:gap-2 text-[13px] md:text-[14px] font-normal"
                       >
                         <Trash2 className="w-4 h-4" />
-                        Hapus
+                        <span className="hidden sm:inline">Hapus</span>
                       </Button>
                       <Button
                         onClick={handlePayment}
                         disabled={isPaymentLoading || !snapReady || getPaymentStatus(selectedBooking?.payments || []) === 'verified'}
-                        className="bg-[#00bc7d] hover:bg-[#00a870] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal disabled:opacity-50"
+                        className="bg-[#00bc7d] hover:bg-[#00a870] text-white rounded-[10px] px-3 md:px-4 h-9 md:h-10 flex items-center gap-1 md:gap-2 text-[13px] md:text-[14px] font-normal disabled:opacity-50"
                       >
                         {isPaymentLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <CreditCard className="w-4 h-4" />
                         )}
-                        {getPaymentStatus(selectedBooking?.payments || []) === 'verified' ? 'Sudah Dibayar' : 'Bayar'}
+                        <span className="hidden sm:inline">{getPaymentStatus(selectedBooking?.payments || []) === 'verified' ? 'Sudah Dibayar' : 'Bayar'}</span>
                       </Button>
                       <Button
                         onClick={() => setIsPrintDialogOpen(true)}
-                        className="bg-[#ad46ff] hover:bg-[#9333ea] text-white rounded-[10px] px-4 h-10 flex items-center gap-2 text-[14px] font-normal"
+                        className="bg-[#ad46ff] hover:bg-[#9333ea] text-white rounded-[10px] px-3 md:px-4 h-9 md:h-10 flex items-center gap-1 md:gap-2 text-[13px] md:text-[14px] font-normal"
                       >
                         <Printer className="w-4 h-4" />
-                        Cetak
+                        <span className="hidden sm:inline">Cetak</span>
                       </Button>
                     </div>
                   </div>

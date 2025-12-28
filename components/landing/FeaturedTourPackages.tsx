@@ -22,7 +22,7 @@ export default function FeaturedTourPackages() {
         <div className="absolute w-96 h-96 bg-yellow-200/20 rounded-full blur-3xl bottom-0 right-1/4" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           {/* Badge */}
@@ -79,7 +79,7 @@ function PackageCard({ package: pkg }: PackageCardProps) {
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
@@ -158,7 +158,7 @@ function PackageCard({ package: pkg }: PackageCardProps) {
 function LoadingSkeleton() {
   return (
     <section className="relative w-full py-12">
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header Skeleton */}
         <div className="text-center mb-12">
           <div className="inline-block h-8 w-40 bg-gradient-to-r from-emerald-100 to-yellow-100 rounded-full mb-6 animate-pulse" />

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
+import { Menu, X } from 'lucide-react'
+import { useState } from 'react'
 
 const imgLogo = "/Logo_Transparent_White.png"
 
@@ -14,6 +16,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ activePage }: AdminSidebarProps) {
   const router = useRouter()
   const { signOut } = useClerk()
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const handleLogout = async () => {
     await signOut()
@@ -85,13 +88,13 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
     }
   ]
 
-  return (
-    <div className="w-64 bg-gradient-to-b from-[#009966] via-[#007a55] to-[#006045] shadow-2xl flex flex-col fixed top-0 left-0 h-screen overflow-y-auto">
+  const sidebarContent = (
+    <>
       {/* Logo Section */}
-      <div className="border-b border-[rgba(0,188,125,0.3)] p-6 flex-shrink-0">
-        <div className="bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-2xl p-4">
+      <div className="border-b border-[rgba(0,188,125,0.3)] p-4 lg:p-6 flex-shrink-0">
+        <div className="bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-2xl p-3 lg:p-4">
           <div className="flex items-center justify-center mb-2">
-            <div className="relative w-24 h-24">
+            <div className="relative w-16 h-16 lg:w-24 lg:h-24">
               <Image
                 src={imgLogo}
                 alt="PP Tour Travel Logo"
@@ -101,38 +104,38 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
               />
             </div>
           </div>
-          <p className="text-white font-bold text-xl text-center tracking-tight">
+          <p className="text-white font-bold text-lg lg:text-xl text-center tracking-tight">
             PP TOUR TRAVEL
           </p>
-          <p className="text-[#a4f4cf] text-center text-base mt-2">
+          <p className="text-[#a4f4cf] text-center text-sm lg:text-base mt-1 lg:mt-2">
             Admin Dashboard
           </p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-3 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <Link
             key={item.id}
             href={item.href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${
-              activePage === item.id
-                ? 'bg-white text-[#007a55] shadow-lg font-semibold'
-                : 'text-emerald-50 hover:bg-[rgba(255,255,255,0.1)]'
-            }`}
+            onClick={() => setIsMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl lg:rounded-2xl transition-colors ${activePage === item.id
+              ? 'bg-white text-[#007a55] shadow-lg font-semibold'
+              : 'text-emerald-50 hover:bg-[rgba(255,255,255,0.1)]'
+              }`}
           >
             {item.icon}
-            <span>{item.label}</span>
+            <span className="text-sm lg:text-base">{item.label}</span>
           </Link>
         ))}
       </nav>
 
       {/* Logout Button */}
-      <div className="border-t border-[rgba(0,188,125,0.3)] p-4 flex-shrink-0">
+      <div className="border-t border-[rgba(0,188,125,0.3)] p-3 lg:p-4 flex-shrink-0">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 text-emerald-50 rounded-2xl hover:bg-[rgba(255,255,255,0.1)] transition-colors w-full"
+          className="flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-emerald-50 rounded-xl lg:rounded-2xl hover:bg-[rgba(255,255,255,0.1)] transition-colors w-full text-sm lg:text-base"
         >
           <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -140,6 +143,46 @@ export default function AdminSidebar({ activePage }: AdminSidebarProps) {
           <span>Keluar</span>
         </button>
       </div>
-    </div>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobile Header with Toggle */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#009966] to-[#007a55] shadow-lg h-14 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="relative w-8 h-8">
+            <Image src={imgLogo} alt="Logo" fill className="object-contain" />
+          </div>
+          <span className="text-white font-bold text-sm">PP Tour Travel</span>
+        </div>
+        <button
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Drawer */}
+      <div className={`lg:hidden fixed top-14 left-0 w-64 h-[calc(100vh-56px)] z-50 bg-gradient-to-b from-[#009966] via-[#007a55] to-[#006045] shadow-2xl flex flex-col transform transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {sidebarContent}
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-64 bg-gradient-to-b from-[#009966] via-[#007a55] to-[#006045] shadow-2xl flex-col fixed top-0 left-0 h-screen overflow-y-auto">
+        {sidebarContent}
+      </div>
+    </>
   )
 }
+

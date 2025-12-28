@@ -7,7 +7,7 @@ import { Award, Users, Globe, Heart, Shield, Briefcase, Star, DollarSign } from 
 export default function AboutUsSection() {
   return (
     <section id="about-us" className="relative w-full py-12 pb-6 bg-white overflow-hidden">
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-16">
           {/* Badge */}
@@ -31,7 +31,7 @@ export default function AboutUsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Left: Image Section */}
           <div className="relative">
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative h-[300px] md:h-[400px] lg:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/landing/explore-travel.jpg"
                 alt="Explore Travel Agency"
@@ -39,7 +39,7 @@ export default function AboutUsSection() {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              
+
               {/* Experience Badge */}
               <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
                 <div className="flex items-center gap-4">
@@ -53,7 +53,7 @@ export default function AboutUsSection() {
                 </div>
               </div>
             </div>
-            
+
             {/* Decorative Blobs */}
             <div className="absolute -top-6 -right-6 w-32 h-32 bg-emerald-200/20 rounded-full blur-2xl" />
             <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-yellow-200/20 rounded-full blur-2xl" />
@@ -116,7 +116,7 @@ export default function AboutUsSection() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white border-2 border-gray-200 rounded-2xl p-5">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-9 h-9 bg-gray-50 rounded-lg">

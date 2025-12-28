@@ -61,7 +61,7 @@ export default function WhyChooseUsSection() {
       <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-100/30 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-10 w-72 h-72 bg-blue-100/30 rounded-full blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-full">
@@ -77,7 +77,7 @@ export default function WhyChooseUsSection() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
           {features.map((feature, index) => (
             <div key={index} className="bg-white border-2 border-gray-100 rounded-2xl p-8 shadow-lg hover:shadow-xl hover:border-gray-200 transition-all duration-300">
               <div className={`w-16 h-16 ${feature.bgColor} rounded-2xl flex items-center justify-center text-white mb-6`}>
@@ -104,7 +104,7 @@ export default function WhyChooseUsSection() {
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {trustedBy.map((item, index) => (
               <div key={index} className="text-center">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center">

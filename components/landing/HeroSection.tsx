@@ -12,7 +12,7 @@ export default function HeroSection() {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
@@ -22,9 +22,9 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative h-[944px] w-full overflow-hidden">
+    <section className="relative h-[600px] md:h-[750px] lg:h-[944px] w-full overflow-hidden">
       {/* Background Image with Parallax */}
-      <div 
+      <div
         className="absolute inset-0 transition-transform duration-100 ease-out"
         style={{ transform: `translateY(${scrollY * 0.5}px)` }}
       >
@@ -39,7 +39,7 @@ export default function HeroSection() {
 
       {/* Animated Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-gray-900/85 via-gray-900/70 to-gray-900/40"></div>
-      
+
       {/* Decorative Gradient Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[20%] right-[10%] w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -50,10 +50,10 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative h-full flex items-center">
-        <div className="max-w-7xl mx-auto px-8 w-full">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 w-full">
           <div className="max-w-2xl">
             {/* Badge */}
-            <div 
+            <div
               className={`inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/10 backdrop-blur-md rounded-full border border-white/20 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               <Sparkles className="w-4 h-4 text-emerald-400" />
@@ -63,8 +63,8 @@ export default function HeroSection() {
             </div>
 
             {/* Main Title */}
-            <h1 
-              className={`text-white text-5xl md:text-6xl font-bold leading-tight mb-6 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            <h1
+              className={`text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 md:mb-6 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               Travel, nikmati dan{" "}
               <span className="bg-gradient-to-r from-emerald-400 via-emerald-300 to-blue-400 bg-clip-text text-transparent">
@@ -73,15 +73,15 @@ export default function HeroSection() {
             </h1>
 
             {/* Subtitle */}
-            <p 
-              className={`text-white/80 text-lg mb-8 max-w-xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            <p
+              className={`text-white/80 text-sm md:text-base lg:text-lg mb-6 md:mb-8 max-w-xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               Wujudkan impian liburan Anda bersama kami. Paket lengkap, harga terjangkau, pengalaman tak terlupakan.
             </p>
 
             {/* CTA Buttons */}
-            <div 
-              className={`flex flex-wrap gap-4 mb-12 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            <div
+              className={`flex flex-wrap gap-3 md:gap-4 mb-8 md:mb-12 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               <Link href="paket-tour">
                 <Button
@@ -106,33 +106,33 @@ export default function HeroSection() {
             </div>
 
             {/* Stats Counter */}
-            <div 
-              className={`flex gap-8 transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            <div
+              className={`flex flex-wrap gap-3 md:gap-6 lg:gap-8 transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
             >
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-lg blur group-hover:blur-xl transition-all duration-300"></div>
                 <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3">
-                  <div className="text-3xl font-bold text-white">500+</div>
+                  <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">500+</div>
                   <div className="text-sm text-white/70">Pelanggan Puas</div>
                 </div>
               </div>
-              
-              <div className="w-px bg-white/20"></div>
-              
+
+              <div className="hidden md:block w-px bg-white/20"></div>
+
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg blur group-hover:blur-xl transition-all duration-300"></div>
                 <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3">
-                  <div className="text-3xl font-bold text-white">50+</div>
+                  <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">50+</div>
                   <div className="text-sm text-white/70">Destinasi Wisata</div>
                 </div>
               </div>
-              
-              <div className="w-px bg-white/20"></div>
-              
+
+              <div className="hidden md:block w-px bg-white/20"></div>
+
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg blur group-hover:blur-xl transition-all duration-300"></div>
                 <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg px-4 py-3">
-                  <div className="text-3xl font-bold text-white">4.9★</div>
+                  <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">4.9★</div>
                   <div className="text-sm text-white/70">Rating Tertinggi</div>
                 </div>
               </div>

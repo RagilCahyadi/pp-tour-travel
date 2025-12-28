@@ -7,7 +7,7 @@ import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from "lucide-react"
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Company Info */}
           <div>
@@ -98,9 +98,9 @@ export default function Footer() {
                 </div>
               </li>
               <li>
-                <a href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih" 
-                target="_blank" 
-                className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
+                <a href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih"
+                  target="_blank"
+                  className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors text-sm">
                   <Phone className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                   +62 856-6420-2185
                 </a>

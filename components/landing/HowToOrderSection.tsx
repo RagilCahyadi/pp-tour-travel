@@ -45,7 +45,7 @@ export default function HowToOrderSection() {
 
   return (
     <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-emerald-100 rounded-full">
@@ -63,10 +63,10 @@ export default function HowToOrderSection() {
         {/* Steps Container */}
         <div className="relative mb-16">
           {/* Progress Line */}
-          <div className="absolute top-[98px] left-0 right-0 h-1 bg-gradient-to-r from-emerald-200 via-blue-200 via-purple-200 to-orange-200 z-0"></div>
-          
+          <div className="hidden md:block absolute top-[98px] left-0 right-0 h-1 bg-gradient-to-r from-emerald-200 via-blue-200 via-purple-200 to-orange-200 z-0"></div>
+
           {/* Steps Grid */}
-          <div className="grid md:grid-cols-4 gap-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
             {steps.map((step, index) => (
               <div key={index} className="relative group">
                 <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-lg p-8 h-full transition-all duration-300 hover:shadow-xl hover:border-gray-200">
@@ -79,10 +79,10 @@ export default function HowToOrderSection() {
                   <div className="mb-6 mt-4 relative flex justify-center">
                     {/* Outer blur - largest */}
                     <div className={`absolute w-[110px] h-[110px] ${step.glowColor} rounded-3xl blur-xl opacity-30 transition-all duration-500 group-hover:opacity-50`}></div>
-                    
+
                     {/* Middle blur */}
                     <div className={`absolute w-[105px] h-[105px] ${step.glowColor} rounded-3xl blur-md opacity-20 transition-all duration-500 group-hover:opacity-40`}></div>
-                    
+
                     {/* Icon Container */}
                     <div className={`relative w-24 h-24 ${step.iconBg} rounded-3xl shadow-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
                       <div className={`absolute inset-0 ${step.iconBg} rounded-3xl opacity-10`}></div>
@@ -90,7 +90,7 @@ export default function HowToOrderSection() {
                         {step.icon}
                       </div>
                     </div>
-                    
+
                     {/* Decorative dots */}
                     <div className={`absolute top-0 right-6 w-3 h-3 ${step.glowColor} rounded-full opacity-60 transition-all duration-300 group-hover:scale-125`}></div>
                     <div className={`absolute bottom-0 left-6 w-2 h-2 ${step.glowColor} rounded-full opacity-60 transition-all duration-300 group-hover:scale-125`}></div>
@@ -144,9 +144,9 @@ export default function HowToOrderSection() {
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </Link>
-                <Link 
-                href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih"
-                target="_blank">
+                <Link
+                  href="https://wa.me/6285664202185?text=Halo%20mimin%20PP%20Tour%20Travel%2C%20saya%20mau%20konsultasi%20nih"
+                  target="_blank">
                   <button className="inline-flex items-center gap-2 px-8 py-4 bg-[#007a55] hover:bg-[#006644] border-2 border-emerald-300 text-white text-lg rounded-2xl shadow-xl font-medium transition-all duration-300 hover:scale-105">
                     Hubungi Kami
                   </button>

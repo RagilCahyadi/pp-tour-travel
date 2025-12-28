@@ -145,7 +145,7 @@ export default function AdminPemesananPage() {
     return (
       <div className="bg-white relative min-h-screen">
         <AdminSidebar activePage="pemesanan" />
-        <div className="ml-64 min-h-screen flex items-center justify-center">
+        <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009966] mx-auto"></div>
             <p className="mt-4 text-gray-600">Memuat data pemesanan...</p>
@@ -159,7 +159,7 @@ export default function AdminPemesananPage() {
     return (
       <div className="bg-white relative min-h-screen">
         <AdminSidebar activePage="pemesanan" />
-        <div className="ml-64 min-h-screen flex items-center justify-center">
+        <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen flex items-center justify-center">
           <div className="text-center max-w-2xl p-8">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <svg className="w-12 h-12 text-red-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,12 +258,12 @@ export default function AdminPemesananPage() {
       <AdminSidebar activePage="pemesanan" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen">
-        <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen">
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight mb-1">
                 Kelola Pemesanan Pelanggan
               </h1>
               <p className="text-[#6a7282] text-base">
@@ -271,26 +271,26 @@ export default function AdminPemesananPage() {
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 md:gap-3">
               <button
                 onClick={() => refetch()}
-                className="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                className="bg-white border border-gray-200 text-gray-700 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl flex items-center gap-2 hover:bg-gray-50 transition-colors"
                 title="Refresh data dari Supabase"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Refresh</span>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={handleDeleteClick}
-                className="bg-[#e7000b] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#e7000b] text-white px-3 md:px-5 py-2 md:py-2.5 rounded-2xl flex items-center gap-2 hover:bg-[#c00009] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!selectedOrder}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                <span>Hapus</span>
+                <span className="hidden sm:inline">Hapus</span>
               </button>
               <button
                 onClick={() => {
@@ -299,25 +299,25 @@ export default function AdminPemesananPage() {
                     if (booking) handleManageOrder(booking)
                   }
                 }}
-                className="bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:from-[#008055] hover:to-[#00a66b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white px-3 md:px-5 py-2 md:py-2.5 rounded-2xl flex items-center gap-2 hover:from-[#008055] hover:to-[#00a66b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!selectedOrder}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                <span>Kelola Pesanan</span>
+                <span className="hidden sm:inline">Kelola Pesanan</span>
               </button>
             </div>
           </div>
 
           {/* Tabs */}
           <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-2">
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <button
                 onClick={() => handleTabChange('all')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-all ${selectedTab === 'all'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
                   }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,8 +325,8 @@ export default function AdminPemesananPage() {
                 </svg>
                 <span className={selectedTab === 'all' ? 'font-semibold' : ''}>Semua Pesanan</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-sm ${selectedTab === 'all'
-                    ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                    : 'bg-gray-100 text-gray-600'
+                  ? 'bg-[rgba(255,255,255,0.2)] text-white'
+                  : 'bg-gray-100 text-gray-600'
                   }`}>
                   {stats.total}
                 </span>
@@ -335,8 +335,8 @@ export default function AdminPemesananPage() {
               <button
                 onClick={() => handleTabChange('confirmed')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-all ${selectedTab === 'confirmed'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
                   }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -344,8 +344,8 @@ export default function AdminPemesananPage() {
                 </svg>
                 <span className={selectedTab === 'confirmed' ? 'font-semibold' : ''}>Dikonfirmasi</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-sm ${selectedTab === 'confirmed'
-                    ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                    : 'bg-[#d0fae5] text-[#009966]'
+                  ? 'bg-[rgba(255,255,255,0.2)] text-white'
+                  : 'bg-[#d0fae5] text-[#009966]'
                   }`}>
                   {stats.confirmed}
                 </span>
@@ -354,8 +354,8 @@ export default function AdminPemesananPage() {
               <button
                 onClick={() => handleTabChange('pending')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-all ${selectedTab === 'pending'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
                   }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -363,8 +363,8 @@ export default function AdminPemesananPage() {
                 </svg>
                 <span className={selectedTab === 'pending' ? 'font-semibold' : ''}>Pending</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-sm ${selectedTab === 'pending'
-                    ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                    : 'bg-[#fef3c6] text-[#e17100]'
+                  ? 'bg-[rgba(255,255,255,0.2)] text-white'
+                  : 'bg-[#fef3c6] text-[#e17100]'
                   }`}>
                   {stats.pending}
                 </span>
@@ -373,8 +373,8 @@ export default function AdminPemesananPage() {
               <button
                 onClick={() => handleTabChange('cancelled')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-all ${selectedTab === 'cancelled'
-                    ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
-                    : 'text-[#4a5565] hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-[#009966] to-[#00bc7d] text-white shadow-lg'
+                  : 'text-[#4a5565] hover:bg-gray-50'
                   }`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -382,8 +382,8 @@ export default function AdminPemesananPage() {
                 </svg>
                 <span className={selectedTab === 'cancelled' ? 'font-semibold' : ''}>Dibatalkan</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-sm ${selectedTab === 'cancelled'
-                    ? 'bg-[rgba(255,255,255,0.2)] text-white'
-                    : 'bg-[#ffe2e2] text-[#e7000b]'
+                  ? 'bg-[rgba(255,255,255,0.2)] text-white'
+                  : 'bg-[#ffe2e2] text-[#e7000b]'
                   }`}>
                   {stats.cancelled}
                 </span>
@@ -392,7 +392,7 @@ export default function AdminPemesananPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -599,8 +599,8 @@ export default function AdminPemesananPage() {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
-                        ? 'bg-[#009966] text-white'
-                        : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
+                      ? 'bg-[#009966] text-white'
+                      : 'bg-white border border-gray-200 text-[#364153] hover:bg-gray-50'
                       }`}
                   >
                     {page}

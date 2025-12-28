@@ -67,12 +67,12 @@ export default function AdminDashboard() {
       <AdminSidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto">
-        <div className="p-8 space-y-6">
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto">
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-[#101828] tracking-tight">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight">
                 Dashboard Overview
               </h1>
               <p className="text-[#6a7282] mt-1">
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {/* Booking Bulan Ini */}
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-5 hover:shadow-md transition-all duration-300">
               <div className="flex items-start justify-between">
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Trend Booking */}
             <div className="col-span-2 bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Bottom Section */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Booking Terbaru */}
             <div className="col-span-2 bg-white border border-gray-100 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center justify-between mb-6">

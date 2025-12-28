@@ -10,7 +10,7 @@ export default function TopDestinationsSection() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-100/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-yellow-100/20 rounded-full blur-3xl"></div>
 
-      <div className="relative max-w-7xl mx-auto px-8">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-2xl shadow-xl mb-6">
@@ -27,7 +27,7 @@ export default function TopDestinationsSection() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid md:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
           {/* Destination Card - Bali (Top 1) */}
           <div className="bg-white border-2 border-gray-100 rounded-3xl shadow-2xl overflow-hidden">
             <div className="relative h-80">
@@ -38,7 +38,7 @@ export default function TopDestinationsSection() {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-              
+
               {/* Top Badge */}
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2">
                 <span className="text-2xl">🥇</span>
@@ -157,7 +157,7 @@ export default function TopDestinationsSection() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white border-2 border-gray-200 rounded-2xl p-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-50">
@@ -189,7 +189,7 @@ export default function TopDestinationsSection() {
 
         {/* Bottom Stats Banner */}
         <div className="mt-12 bg-gradient-to-r from-[#00bc7d] to-[#009966] rounded-3xl shadow-2xl p-8">
-          <div className="grid grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,7 +234,7 @@ export default function TopDestinationsSection() {
           <h3 className="text-2xl font-semibold text-gray-900 text-center mb-12">
             Nilai-Nilai Kami
           </h3>
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
               <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
                 <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

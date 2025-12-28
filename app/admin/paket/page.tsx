@@ -494,12 +494,12 @@ export default function AdminPaketPage() {
       <AdminSidebar activePage="paket" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen overflow-auto">
-        <div className="p-8 bg-gradient-to-br from-[#f9fafb] to-[#f3f4f6]">
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen overflow-auto">
+        <div className="p-4 md:p-6 lg:p-8 bg-gradient-to-br from-[#f9fafb] to-[#f3f4f6]">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-[#101828] tracking-tight">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight">
                 Kelola Paket Tour Travel
               </h1>
               <p className="text-base text-[#6a7282] mt-1">
@@ -519,7 +519,7 @@ export default function AdminPaketPage() {
 
           {/* Search and Filter */}
           <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-6 mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex-1 relative">
                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -545,7 +545,7 @@ export default function AdminPaketPage() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
             <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#d0fae5] rounded-xl flex items-center justify-center">
@@ -637,7 +637,7 @@ export default function AdminPaketPage() {
           {/* Package Cards Grid */}
           {!loading && !error && (
             <>
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {currentPackages.length > 0 ? currentPackages.map((pkg) => (
                   <div key={pkg.id} className="bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden">
                     {/* Package Image */}
@@ -726,7 +726,7 @@ export default function AdminPaketPage() {
                     </div>
                   </div>
                 )) : (
-                  <div className="col-span-3 bg-white border border-gray-100 rounded-2xl shadow-md p-16 text-center">
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-gray-100 rounded-2xl shadow-md p-16 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

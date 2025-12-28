@@ -206,12 +206,12 @@ export default function AdminPembayaranPage() {
       <AdminSidebar activePage="pembayaran" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen overflow-auto">
-        <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen overflow-auto">
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Verifikasi Pembayaran</h1>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight mb-1">Verifikasi Pembayaran</h1>
               <p className="text-[#6a7282] text-base">Kelola dan verifikasi bukti pembayaran dari pelanggan</p>
             </div>
 
@@ -241,7 +241,7 @@ export default function AdminPembayaranPage() {
 
           {/* Tabs */}
           <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-2">
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <button
                 onClick={() => handleTabChange('all')}
                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl transition-colors ${selectedTab === 'all'
@@ -314,7 +314,7 @@ export default function AdminPembayaranPage() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <div className="bg-white border border-gray-100 rounded-2xl shadow-md p-5">
               <div className="flex items-center justify-between">
                 <div>

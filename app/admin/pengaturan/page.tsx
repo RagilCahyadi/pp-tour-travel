@@ -318,11 +318,11 @@ export default function AdminPengaturanPage() {
       <AdminSidebar activePage="pengaturan" />
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen overflow-auto">
-        <div className="p-8 space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
+      <div className="ml-0 lg:ml-64 pt-14 lg:pt-0 min-h-screen overflow-auto">
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ background: 'linear-gradient(141.98deg, #f9fafb 0%, #f3f4f6 100%)' }}>
           {/* Header */}
           <div>
-            <h1 className="text-4xl font-bold text-[#101828] tracking-tight mb-1">Pengaturan</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#101828] tracking-tight mb-1">Pengaturan</h1>
             <p className="text-[#6a7282] text-base">Kelola profil dan preferensi akun Anda</p>
           </div>
 
@@ -344,7 +344,7 @@ export default function AdminPengaturanPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 grid grid-cols-3 gap-6">
+            <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
               {/* Left Column - Profile Photo & Settings */}
               <div className="space-y-6">
                 <div className="border border-gray-100 rounded-[16.4px] p-6">
@@ -404,9 +404,9 @@ export default function AdminPengaturanPage() {
               </div>
 
               {/* Right Column - General Information */}
-              <div className="col-span-2 border border-gray-100 rounded-[16.4px] p-6">
+              <div className="lg:col-span-2 border border-gray-100 rounded-[16.4px] p-4 md:p-6">
                 <h3 className="text-xl font-semibold text-[#364153] mb-6">Informasi Umum</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs text-[#6a7282] mb-2">Nama</label>
                     <input
@@ -634,7 +634,7 @@ export default function AdminPengaturanPage() {
                                   )}
                                   {userData.is_admin ? 'Cabut Admin' : 'Jadikan Admin'}
                                 </button>
-{/* 
+                                {/* 
                                 <button
                                   onClick={() => handleBanUser(userData.id, userData.banned_at)}
                                   disabled={isCurrentUser || isUpdating}
