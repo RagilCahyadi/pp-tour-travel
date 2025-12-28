@@ -1040,7 +1040,7 @@ export default function AdminPaketPage() {
                   <span className="text-xs text-gray-500">Pilih icon yang sesuai agar menarik</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div className="flex flex-col gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100 fasilitas-input-container">
                   <div className="flex-1 space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">NAMA FASILITAS</label>
                     <input
@@ -1051,7 +1051,7 @@ export default function AdminPaketPage() {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#009966] bg-white"
                     />
                   </div>
-                  <div className="w-full sm:w-[180px] space-y-1 relative">
+                  <div className="w-full space-y-1 relative fasilitas-icon-select">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">PILIH ICON</label>
                     <button
                       type="button"
@@ -1089,14 +1089,14 @@ export default function AdminPaketPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex items-end fasilitas-add-button-container">
                     <button
                       type="button"
                       onClick={addFacility}
-                      className="h-[42px] w-full sm:w-[42px] bg-[#2563eb] text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 shadow-md transition-all active:scale-95"
+                      className="h-[42px] w-full bg-[#2563eb] text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 shadow-md transition-all active:scale-95 fasilitas-add-button"
                     >
                       <Plus className="w-5 h-5" />
-                      <span className="sm:hidden">Tambah</span>
+                      <span className="fasilitas-add-button-text">Tambah</span>
                     </button>
                   </div>
                 </div>
@@ -1415,7 +1415,7 @@ export default function AdminPaketPage() {
                   <span className="text-xs text-gray-500">Pilih icon yang sesuai agar menarik</span>
                 </div>
 
-                <div className="flex gap-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div className="flex flex-col gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100 fasilitas-input-container">
                   <div className="flex-1 space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">NAMA FASILITAS</label>
                     <input
@@ -1426,7 +1426,7 @@ export default function AdminPaketPage() {
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#009966] bg-white"
                     />
                   </div>
-                  <div className="w-[200px] space-y-1 relative">
+                  <div className="w-full space-y-1 relative fasilitas-icon-select">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">PILIH ICON</label>
                     <button
                       type="button"
@@ -1466,13 +1466,14 @@ export default function AdminPaketPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex items-end fasilitas-add-button-container">
                     <button
                       type="button"
                       onClick={addFacility}
-                      className="h-[42px] w-[42px] bg-[#2563eb] text-white rounded-lg flex items-center justify-center hover:bg-blue-700 shadow-md transition-all active:scale-95"
+                      className="h-[42px] w-full bg-[#2563eb] text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 shadow-md transition-all active:scale-95 fasilitas-add-button"
                     >
                       <Plus className="w-5 h-5" />
+                      <span className="fasilitas-add-button-text">Tambah</span>
                     </button>
                   </div>
                 </div>

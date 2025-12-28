@@ -178,15 +178,18 @@ export function useDashboard() {
         .order('tanggal_keberangkatan', { ascending: true })
         .limit(5)
 
-      const formattedDepartures = departuresData?.map(d => ({
-        id: d.id,
-        kode_jadwal: d.kode_jadwal,
-        nama_paket: (d.tour_packages as any)?.nama_paket || 'N/A',
-        tanggal_keberangkatan: d.tanggal_keberangkatan,
-        waktu_keberangkatan: d.waktu_keberangkatan,
-        nama_instansi: (d.bookings as any)?.[0]?.customers?.nama_perusahaan || 'N/A',
-        jumlah_pax: (d.bookings as any[])?.reduce((sum: number, b: any) => sum + (b.jumlah_pax || 0), 0) || 0
-      })) || []
+      const formattedDepartures = departuresData?.map(d => {
+        const bookingsArray = Array.isArray(d.bookings) ? d.bookings : (d.bookings ? [d.bookings] : [])
+        return {
+          id: d.id,
+          kode_jadwal: d.kode_jadwal,
+          nama_paket: (d.tour_packages as any)?.nama_paket || 'N/A',
+          tanggal_keberangkatan: d.tanggal_keberangkatan,
+          waktu_keberangkatan: d.waktu_keberangkatan,
+          nama_instansi: (bookingsArray[0] as any)?.customers?.nama_perusahaan || 'N/A',
+          jumlah_pax: bookingsArray.reduce((sum: number, b: any) => sum + (b.jumlah_pax || 0), 0)
+        }
+      }) || []
 
       setUpcomingDepartures(formattedDepartures)
 

@@ -115,6 +115,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -125,6 +126,7 @@
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -145,6 +147,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -157,18 +160,24 @@
 
 /* Float animation for hero elements */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-20px);
   }
 }
 
 @keyframes float-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-15px) rotate(5deg);
   }
@@ -180,4 +189,50 @@
 
 .animate-float-slow {
   animation: float-slow 6s ease-in-out infinite;
+}
+
+/* Fasilitas & Icon responsive layout for admin modal */
+/* Mobile first: By default (< 430px), stack vertically */
+.fasilitas-input-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+.fasilitas-icon-select {
+  width: 100% !important;
+}
+
+.fasilitas-add-button {
+  width: 100% !important;
+}
+
+.fasilitas-add-button-text {
+  display: inline !important;
+}
+
+/* For screens > 430px, use horizontal layout */
+@media (min-width: 430px) {
+  .fasilitas-input-container {
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    align-items: flex-end !important;
+  }
+
+  .fasilitas-icon-select {
+    width: 180px !important;
+    flex-shrink: 0;
+  }
+
+  .fasilitas-add-button-container {
+    flex-shrink: 0;
+  }
+
+  .fasilitas-add-button {
+    width: 42px !important;
+  }
+
+  .fasilitas-add-button-text {
+    display: none !important;
+  }
 }
